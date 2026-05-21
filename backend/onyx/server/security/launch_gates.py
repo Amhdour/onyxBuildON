@@ -1,21 +1,25 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from onyx.auth.permissions import require_permission
 from onyx.db.enums import Permission
 from onyx.db.models import User
-from onyx.server.security._state import LAUNCH_GATE_RUNS
-from onyx.server.security._state import run_launch_gate_engine
+from onyx.security_layer.persistence_service import SecurityPersistenceService
 from shared_configs.contextvars import get_current_tenant_id
 
 router = APIRouter(prefix="/launch-gates")
 
 
 @router.get("")
-def get_launch_gate_runs(_: User = Depends(require_permission(Permission.FULL_ADMIN_PANEL_ACCESS))) -> list[dict[str, object]]:
-    tenant_id = get_current_tenant_id()
-    return [run for run in LAUNCH_GATE_RUNS if run.get("tenant_id") == tenant_id]
-
-
-@router.post("/run")
-def run_launch_gate(_: User = Depends(require_permission(Permission.FULL_ADMIN_PANEL_ACCESS))) -> dict[str, object]:
-    return run_launch_gate_engine(tenant_id=get_current_tenant_id())
+def get_launch_gate_runs(
+    _: User = Depends(require_permission(Permission.FULL_ADMIN_PANEL_ACCESS)),
+    status: str | None = None,
+    correlation_id: str | None = None,
+    limit: int = Query(default=100, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+) -> list[dict[str, object]]:
+    rows = SecurityPersistenceService().list_launch_gate_runs(
+        filters={"tenant_id": get_current_tenant_id(), "status": status, "correlation_id": correlation_id},
+        limit=limit,
+        offset=offset,
+    )
+    return [row.__dict__ for row in rows]
