@@ -46,11 +46,16 @@ def _authorize_mcp_call(access_token: AccessToken, action: str) -> dict[str, Any
     if not is_mcp_auth_enabled():
         return None
 
+    direct_tenant_id = getattr(access_token, "tenant_id", None)
+    token_extra = getattr(access_token, "extra", None)
+    extra_tenant_id = token_extra.get("tenant_id") if isinstance(token_extra, dict) else None
+    tenant_id = str(direct_tenant_id or extra_tenant_id or "missing:tenant")
+
     session = MCPSession(
         client_id=access_token.client_id or "mcp",
         session_id=access_token.token[:12],
         user_id=access_token.client_id or "missing:user",
-        tenant_id=str(getattr(access_token, "tenant_id", None) or access_token.extra.get("tenant_id") if getattr(access_token, "extra", None) else "missing:tenant"),
+        tenant_id=tenant_id,
         scopes=set(access_token.scopes or []),
     )
     result = _mcp_authorizer.authorize(session=session, action=action)

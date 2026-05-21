@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from onyx.security_layer.audit.service import AuditService
 from onyx.security_layer.decisions.models import DecisionType
 from onyx.security_layer.findings.service import FindingService
@@ -6,6 +7,7 @@ from onyx.security_layer.mcp_authorizer.authorizer import MCPAuthorizer
 from onyx.security_layer.mcp_authorizer.authorizer import is_mcp_auth_enabled
 from onyx.security_layer.mcp_authorizer.session import MCPSession
 from onyx.security_layer.policy.engine import PolicyEngine
+from onyx.mcp_server.tools.search import _authorize_mcp_call
 
 
 def _session(scopes: set[str]) -> MCPSession:
@@ -86,3 +88,15 @@ def test_mcp_missing_context_allowed_audited_in_observe_mode(monkeypatch) -> Non
     result = _authorizer(audit_service=audit).authorize(sess, "search_indexed_documents")
     assert result.outcome == DecisionType.ALLOW
     assert len(audit.list_all()) >= 2
+
+
+def test_tenant_id_from_direct_token_field(monkeypatch) -> None:
+    monkeypatch.setenv("SECURITY_MCP_AUTH_ENABLED", "true")
+    token = SimpleNamespace(client_id="u1", token="tok123456789", scopes=["mcp:use", "mcp:search"], tenant_id="tenant-direct", extra={"tenant_id": "tenant-extra"})
+    assert _authorize_mcp_call(token, "search_indexed_documents") is None
+
+
+def test_tenant_id_from_token_extra(monkeypatch) -> None:
+    monkeypatch.setenv("SECURITY_MCP_AUTH_ENABLED", "true")
+    token = SimpleNamespace(client_id="u1", token="tok123456789", scopes=["mcp:use", "mcp:search"], tenant_id=None, extra={"tenant_id": "tenant-extra"})
+    assert _authorize_mcp_call(token, "search_indexed_documents") is None
