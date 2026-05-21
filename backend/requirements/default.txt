@@ -2157,9 +2157,9 @@ openapi-pydantic==0.5.1 \
     --hash=sha256:a3a09ef4586f5bd760a8df7f43028b60cafb6d9f61de2acba9574766255ab146 \
     --hash=sha256:ff6835af6bde7a459fb93eb93bb92b8749b754fc6e51b2f1590a19dc3005ee0d
     # via fastmcp
-openinference-instrumentation==0.1.42 \
-    --hash=sha256:2275babc34022e151b5492cfba41d3b12e28377f8e08cb45e5d64fe2d9d7fe37 \
-    --hash=sha256:e7521ff90833ef7cc65db526a2f59b76a496180abeaaee30ec6abbbc0b43f8ec
+openinference-instrumentation==0.1.50 \
+    --hash=sha256:3ce2e19bc832cbfc5e141a1a78d6f5f9547b98ddfaecf8128edd2b5e6ed5c6e6 \
+    --hash=sha256:e757e308df590f393d02b1cfcbd934d728cf876fca2f4432b2e7052ae9b64622
 openinference-semantic-conventions==0.1.25 \
     --hash=sha256:3814240f3bd61f05d9562b761de70ee793d55b03bca1634edf57d7a2735af238 \
     --hash=sha256:f0a8c2cfbd00195d1f362b4803518341e80867d446c2959bf1743f1894fce31d
