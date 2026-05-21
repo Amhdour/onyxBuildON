@@ -1,0 +1,21 @@
+# Phase 2 Backlog
+
+- full connector security matrix
+- OAuth lifecycle guard
+- API key/PAT advanced scoping
+- SCIM/SAML lifecycle checks
+- public sharing controls
+- memory guard
+- skill guard
+- persona guard
+- bot security
+- browser extension gate
+- desktop app gate
+- deep research guard
+- image/voice controls
+- supply-chain gates
+- migration safety gates
+- deletion/pruning gates
+- tenant-level policy editor
+- approval workflow UI
+- SIEM export
