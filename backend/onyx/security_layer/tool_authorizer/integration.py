@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 from typing import Any
 
@@ -11,6 +10,10 @@ from onyx.security_layer.findings.models import SecurityFinding
 from onyx.security_layer.context import SecurityContext
 from onyx.security_layer.tool_authorizer.authorizer import ToolAuthorizationResult
 from onyx.security_layer.tool_authorizer.authorizer import ToolAuthorizer
+from onyx.security_layer.mode import is_security_layer_enabled
+from onyx.security_layer.mode import is_observe_mode
+from onyx.security_layer.mode import should_fail_closed
+from onyx.security_layer.mode import should_fail_open
 
 
 @dataclass
@@ -30,8 +33,7 @@ def run_tool_authorization_gate(
     *,
     audit_service: AuditService | None = None,
 ) -> ToolAuthorizationGateResult:
-    security_enabled = os.getenv("SECURITY_LAYER_ENABLED", "true").lower() == "true"
-    mode = os.getenv("SECURITY_LAYER_MODE", "enforce").lower()
+    security_enabled = is_security_layer_enabled()
 
     audit = audit_service or AuditService()
 
@@ -61,7 +63,7 @@ def run_tool_authorization_gate(
         )
     )
 
-    if not context.has_required_context():
+    if not context.has_required_context() and should_fail_closed():
         blocked_event = audit.record(
             AuditEvent(
                 event_type="tool_call_denied_missing_context",
@@ -82,21 +84,42 @@ def run_tool_authorization_gate(
         return ToolAuthorizationGateResult(outcome=DecisionType.ALLOW, audit_events=[proposed_event], finding=None)
 
     authorizer = ToolAuthorizer(audit_service=audit)
-    result: ToolAuthorizationResult = authorizer.authorize(
-        tool_name=tool_name,
-        tool_args=tool_args,
-        user_id=user_id,
-        session_id=session_id,
-        tenant_id=tenant_id,
-        merged_tool_call=merged_tool_call,
-    )
+    try:
+        result: ToolAuthorizationResult = authorizer.authorize(
+            tool_name=tool_name,
+            tool_args=tool_args,
+            user_id=user_id,
+            session_id=session_id,
+            tenant_id=tenant_id,
+            merged_tool_call=merged_tool_call,
+        )
+    except Exception as e:
+        error_event = audit.record(
+            AuditEvent(
+                event_type="security.evaluation.error",
+                tenant_id=context.tenant_id,
+                user_id=context.actor_user_id,
+                session_id=context.session_id,
+                decision_id="error:tool_authorization",
+                resource_type="tool",
+                resource_id=tool_name,
+                action="execute",
+                risk_level="high",
+                details={**context.to_audit_metadata(), "error": str(e)},
+            )
+        )
+        if should_fail_open():
+            return ToolAuthorizationGateResult(outcome=DecisionType.ALLOW, audit_events=[proposed_event, error_event], finding=None)
+        if should_fail_closed():
+            return ToolAuthorizationGateResult(outcome=DecisionType.DENY, audit_events=[proposed_event, error_event], finding=None)
+        return ToolAuthorizationGateResult(outcome=DecisionType.ALLOW, audit_events=[proposed_event, error_event], finding=None)
 
-    should_block = mode in {"enforce", "block"} and result.decision.decision in {
+    should_block = (not is_observe_mode()) and result.decision.decision in {
         DecisionType.DENY,
         DecisionType.REQUIRE_APPROVAL,
     }
 
-    if mode in {"observe", "warn"}:
+    if is_observe_mode():
         outcome = DecisionType.ALLOW
     elif should_block:
         outcome = result.decision.decision
@@ -106,5 +129,5 @@ def run_tool_authorization_gate(
     return ToolAuthorizationGateResult(
         outcome=outcome,
         audit_events=[proposed_event, result.audit_event],
-        finding=result.finding if mode in {"warn", "enforce", "block"} else None,
+        finding=result.finding,
     )
