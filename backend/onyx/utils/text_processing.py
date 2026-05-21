@@ -61,16 +61,21 @@ _INITIAL_FILTER = re.compile(
     flags=re.UNICODE,
 )
 
-# Regex to match invalid Unicode characters that cause UTF-8 encoding errors:
-# - \x00-\x08: Control characters (except tab \x09)
-# - \x0b-\x0c: Vertical tab and form feed
-# - \x0e-\x1f: More control characters (except newline \x0a, carriage return \x0d)
-# - \ud800-\udfff: Surrogate pairs (invalid when unpaired, causes "surrogates not allowed" errors)
-# - \ufdd0-\ufdef: Non-characters
-# - \ufffe-\uffff: Non-characters
-_INVALID_UNICODE_CHARS_RE = re.compile(
-    "[\x00-\x08\x0b\x0c\x0e-\x1f\ud800-\udfff\ufdd0-\ufdef\ufffe\uffff]"
-)
+def _is_invalid_unicode_char(c: str) -> bool:
+    codepoint = ord(c)
+    if 0x00 <= codepoint <= 0x08:
+        return True
+    if 0x0B <= codepoint <= 0x0C:
+        return True
+    if 0x0E <= codepoint <= 0x1F:
+        return True
+    if 0xD800 <= codepoint <= 0xDFFF:
+        return True
+    if 0xFDD0 <= codepoint <= 0xFDEF:
+        return True
+    if codepoint in (0xFFFE, 0xFFFF):
+        return True
+    return False
 
 
 def decode_escapes(s: str) -> str:
@@ -282,10 +287,10 @@ def remove_invalid_unicode_chars(text: str) -> str:
 
     This handles:
     - Control characters (except tab, newline, carriage return)
-    - Unpaired UTF-16 surrogates (e.g. \udc00) that cause 'surrogates not allowed' errors
+    - Unpaired UTF-16 surrogates (for example, malformed low-surrogate codepoints)
     - Unicode non-characters
     """
-    return _INVALID_UNICODE_CHARS_RE.sub("", text)
+    return "".join(c for c in text if not _is_invalid_unicode_char(c))
 
 
 def normalize_char(c: str) -> str:
