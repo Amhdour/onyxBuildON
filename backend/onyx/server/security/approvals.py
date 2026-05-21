@@ -5,6 +5,7 @@ from onyx.db.enums import Permission
 from onyx.db.models import User
 from onyx.security_layer.persistence_service import SecurityPersistenceService
 from shared_configs.contextvars import get_current_tenant_id
+from onyx.server.security.serializers import serialize_security_row
 
 router = APIRouter(prefix="/approvals")
 
@@ -21,7 +22,7 @@ def list_approvals(
         limit=limit,
         offset=offset,
     )
-    return [row.__dict__ for row in rows]
+    return [serialize_security_row(row) for row in rows]
 
 
 @router.post("/{approval_id}/approve")

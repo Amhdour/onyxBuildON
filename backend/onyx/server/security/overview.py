@@ -8,6 +8,7 @@ from onyx.security_layer.findings.service import FindingService
 from onyx.security_layer.models import PolicyMode
 from onyx.security_layer.persistence_service import SecurityPersistenceService
 from shared_configs.contextvars import get_current_tenant_id
+from onyx.server.security.serializers import serialize_security_row
 
 router = APIRouter()
 
@@ -26,7 +27,7 @@ def get_security_overview(_: User = Depends(require_permission(Permission.FULL_A
         "open_findings_count": sum(1 for finding in findings if finding.status == "open"),
         "critical_findings_count": sum(1 for finding in findings if finding.severity == "critical"),
         "high_findings_count": sum(1 for finding in findings if finding.severity == "high"),
-        "recent_denied_tool_calls": [row.__dict__ for row in denied_tools],
-        "recent_denied_retrieval_events": [row.__dict__ for row in denied_retrieval],
-        "recent_denied_mcp_events": [row.__dict__ for row in denied_mcp],
+        "recent_denied_tool_calls": [serialize_security_row(row) for row in denied_tools],
+        "recent_denied_retrieval_events": [serialize_security_row(row) for row in denied_retrieval],
+        "recent_denied_mcp_events": [serialize_security_row(row) for row in denied_mcp],
     }
