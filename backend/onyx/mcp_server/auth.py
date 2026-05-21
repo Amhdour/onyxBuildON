@@ -5,6 +5,7 @@ from typing import Optional
 from fastmcp.server.auth.auth import AccessToken
 from fastmcp.server.auth.auth import TokenVerifier
 
+from onyx.db.mcp import get_mcp_scopes_from_headers
 from onyx.mcp_server.utils import get_http_client
 from onyx.utils.logger import setup_logger
 from onyx.utils.variable_functionality import build_api_server_url_for_http_requests
@@ -37,10 +38,12 @@ class OnyxTokenVerifier(TokenVerifier):
             )
             return None
 
+        scopes = ["mcp:use", *get_mcp_scopes_from_headers(dict(response.headers))]
+
         return AccessToken(
             token=token,
             client_id="mcp",
-            scopes=["mcp:use"],
+            scopes=list(set(scopes)),
             expires_at=None,
             resource=None,
             claims={},

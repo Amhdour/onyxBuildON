@@ -14,6 +14,13 @@ from onyx.mcp_server.api import mcp_server
 from onyx.mcp_server.utils import get_http_client
 from onyx.mcp_server.utils import get_indexed_sources
 from onyx.mcp_server.utils import require_access_token
+from onyx.security_layer.audit.service import AuditService
+from onyx.security_layer.findings.service import FindingService
+from onyx.security_layer.mcp_authorizer.audit import MCPAuditLogger
+from onyx.security_layer.mcp_authorizer.authorizer import MCPAuthorizer
+from onyx.security_layer.mcp_authorizer.authorizer import is_mcp_auth_enabled
+from onyx.security_layer.mcp_authorizer.session import MCPSession
+from onyx.security_layer.policy.engine import PolicyEngine
 from onyx.server.features.search.models import SearchRequest
 from onyx.server.features.search.models import SearchResponse
 from onyx.server.features.search.models import SearchResult
@@ -25,6 +32,29 @@ from onyx.utils.logger import setup_logger
 from onyx.utils.variable_functionality import build_api_server_url_for_http_requests
 
 logger = setup_logger()
+
+_mcp_authorizer = MCPAuthorizer(
+    policy_engine=PolicyEngine(policies=[]),
+    audit_logger=MCPAuditLogger(audit_service=AuditService()),
+    finding_service=FindingService(),
+)
+
+
+def _authorize_mcp_call(access_token: AccessToken, action: str) -> dict[str, Any] | None:
+    if not is_mcp_auth_enabled():
+        return None
+
+    session = MCPSession(
+        client_id=access_token.client_id or "mcp",
+        session_id=access_token.token[:12],
+        user_id=access_token.client_id or "unknown",
+        tenant_id="default",
+        scopes=set(access_token.scopes or []),
+    )
+    result = _mcp_authorizer.authorize(session=session, action=action)
+    if result.outcome.value == "allow":
+        return None
+    return _error_payload(f"MCP authorization blocked action: {result.outcome.value}")
 
 
 async def _post_model(
@@ -141,6 +171,8 @@ async def search_indexed_documents(
 
     # Get authenticated user from FastMCP's access token
     access_token = require_access_token()
+    if auth_error := _authorize_mcp_call(access_token, "search_indexed_documents"):
+        return auth_error
 
     try:
         sources = await get_indexed_sources(access_token)
@@ -234,6 +266,8 @@ async def search_web(
     logger.info("Onyx MCP Server: Web search: query='%s', limit=%s", query, limit)
 
     access_token = require_access_token()
+    if auth_error := _authorize_mcp_call(access_token, "search_web"):
+        return {"error": auth_error["error"], "results": [], "query": query}
 
     try:
         response = await _post_model(

@@ -24,6 +24,17 @@ from onyx.utils.sensitive import SensitiveValue
 logger = setup_logger()
 
 
+def get_mcp_scopes_from_headers(headers: dict[str, str] | None) -> list[str]:
+    """Extract MCP scopes from connection config headers.
+
+    MVP behavior: read comma-separated values from X-Onyx-MCP-Scopes.
+    """
+    if not headers:
+        return []
+    raw_scopes = headers.get("X-Onyx-MCP-Scopes", "")
+    return [scope.strip() for scope in raw_scopes.split(",") if scope.strip()]
+
+
 # MCPServer operations
 def get_all_mcp_servers(db_session: Session) -> list[MCPServer]:
     """Get all MCP servers"""
