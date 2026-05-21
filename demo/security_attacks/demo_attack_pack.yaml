@@ -1,0 +1,10 @@
+attacks:
+  - id: prompt-injection-tool-escalation
+    target: tool_authorization_gate
+    expected: deny_or_warn
+  - id: mcp-scope-overreach
+    target: mcp_scope_authorization
+    expected: deny_or_warn
+  - id: artifact-secret-exfil
+    target: artifact_scanner
+    expected: finding_generated
