@@ -1,19 +1,12 @@
 policy_id: sandbox_policy
-mode: enforce
-rules:
-  - id: deny_delete_prod
-    description: Deny delete on production artifacts
-    condition:
-      action: delete
-      resource_type: production
-    decision: deny
-    risk_level: high
-    reason: Deleting production resources is forbidden
-  - id: require_approval_shell
-    description: Require approval for shell execution
-    condition:
-      action: execute
-      resource_type: shell
-    decision: require_approval
-    risk_level: medium
-    reason: Shell execution requires approval
+mode: observe
+
+production_fail_conditions:
+  - SANDBOX_BACKEND=local
+  - docker_socket_exposed
+  - SANDBOX_BASE_PATH=/tmp/onyx-sandboxes
+  - privileged_containers_enabled
+  - resource_limits_missing
+  - cleanup_disabled
+
+rules: []

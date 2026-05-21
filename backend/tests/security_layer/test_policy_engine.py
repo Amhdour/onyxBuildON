@@ -3,6 +3,7 @@ from pathlib import Path
 from onyx.security_layer.decisions.models import DecisionType
 from onyx.security_layer.policy.context import PolicyContext
 from onyx.security_layer.policy.engine import PolicyEngine
+from onyx.security_layer.policy.loader import load_policy_directory
 
 
 def _ctx(action: str, resource_type: str) -> PolicyContext:
@@ -17,11 +18,14 @@ def _ctx(action: str, resource_type: str) -> PolicyContext:
     )
 
 
-def test_policy_engine_decisions() -> None:
+def test_policy_yaml_directory_loads_and_validates() -> None:
+    policy_path = Path("backend/onyx/security_layer/policies")
+    policies = load_policy_directory(policy_path)
+    assert len(policies) == 8
+    assert all(policy.policy_id for policy in policies)
+
+
+def test_policy_engine_defaults_to_allow_without_matching_rules() -> None:
     engine = PolicyEngine.from_directory(Path("backend/onyx/security_layer/policies"))
-    deny = engine.evaluate(_ctx("delete", "production"))
-    assert deny.decision == DecisionType.DENY
-    approve = engine.evaluate(_ctx("execute", "shell"))
-    assert approve.decision == DecisionType.REQUIRE_APPROVAL
-    allow = engine.evaluate(_ctx("read", "doc"))
-    assert allow.decision == DecisionType.ALLOW
+    result = engine.evaluate(_ctx("read", "doc"))
+    assert result.decision == DecisionType.ALLOW

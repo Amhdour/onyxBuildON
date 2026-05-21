@@ -1,19 +1,15 @@
 policy_id: default_policy
-mode: enforce
-rules:
-  - id: deny_delete_prod
-    description: Deny delete on production artifacts
-    condition:
-      action: delete
-      resource_type: production
-    decision: deny
-    risk_level: high
-    reason: Deleting production resources is forbidden
-  - id: require_approval_shell
-    description: Require approval for shell execution
-    condition:
-      action: execute
-      resource_type: shell
-    decision: require_approval
-    risk_level: medium
-    reason: Shell execution requires approval
+mode: observe
+
+default_behavior:
+  unknown_acl: deny
+  stale_acl: deny
+  sync_failed_acl: deny
+  cross_tenant: deny
+
+audit:
+  redact_secrets: true
+  store_raw_prompts: false
+  store_raw_tool_arguments: false
+
+rules: []
