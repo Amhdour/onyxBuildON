@@ -6,6 +6,9 @@ from dataclasses import dataclass
 from onyx.context.search.models import InferenceChunk
 from onyx.security_layer.audit.models import AuditEvent
 from onyx.security_layer.audit.service import AuditService
+from onyx.security_layer.decisions.models import DecisionType, RiskLevel, SecurityDecision
+from onyx.security_layer.decisions.service import DecisionService
+from onyx.security_layer.mode import is_observe_mode
 from onyx.security_layer.findings.models import FindingSeverity
 from onyx.security_layer.findings.models import SecurityFinding
 from onyx.security_layer.findings.service import FindingService
@@ -68,6 +71,7 @@ def apply_retrieval_acl_guard(
 
     audit = audit_service or AuditService()
     finding_svc = finding_service or FindingService()
+    decision_service = DecisionService()
     safe_user_id = user_id
     safe_session_id = session_id
 
@@ -95,9 +99,9 @@ def apply_retrieval_acl_guard(
         provenances.append(prov)
 
         is_allowed = verdict.decision == RetrievalDecision.ALLOW
-        if is_allowed:
+        if is_allowed or is_observe_mode():
             allowed.append(chunk)
-            event_type = "retrieval_result_allowed"
+            event_type = "retrieval_result_allowed" if is_allowed else "retrieval_result_observed_risky"
         else:
             denied.append(chunk)
             event_type = "retrieval_result_denied"
@@ -120,13 +124,30 @@ def apply_retrieval_acl_guard(
         elif acl_state == ACLState.DELETED_PENDING_PRUNE:
             details["finding"] = "deleted document returned"
 
+        decision = SecurityDecision(
+            decision=DecisionType.ALLOW if (is_allowed or is_observe_mode()) else DecisionType.DENY,
+            risk_level=RiskLevel.LOW if is_allowed else RiskLevel.HIGH,
+            reason=verdict.reason,
+            policy_id=f"retrieval_acl_{acl_state.value}",
+            matched_rules=[acl_state.value],
+            evidence={**details, "surface": "retrieval", "correlation_id": f"retrieval-{chunk.document_id}-{chunk.chunk_id}"},
+            subject_type="user",
+            subject_id=safe_user_id or "missing:user",
+            tenant_id=tenant_id,
+            session_id=safe_session_id or "missing:session",
+            resource_type="chunk",
+            resource_id=f"{chunk.document_id}:{chunk.chunk_id}",
+            action="retrieve",
+        )
+        decision_service.create_policy_decision(decision)
+
         event = audit.record(
             AuditEvent(
                 event_type=event_type,
                 tenant_id=tenant_id,
                 user_id=safe_user_id or "missing",
                 session_id=safe_session_id or "missing",
-                decision_id=f"retrieval-{chunk.document_id}-{chunk.chunk_id}",
+                decision_id=decision.decision_id,
                 resource_type="chunk",
                 resource_id=f"{chunk.document_id}:{chunk.chunk_id}",
                 action="retrieve",

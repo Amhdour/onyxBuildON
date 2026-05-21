@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from onyx.security_layer.decisions.models import DecisionType
 from onyx.security_layer.decisions.models import RiskLevel
 from onyx.security_layer.decisions.models import SecurityDecision
+from onyx.security_layer.decisions.service import DecisionService
 from onyx.security_layer.findings.models import SecurityFinding
 from onyx.security_layer.findings.service import FindingService
 from onyx.security_layer.mcp_authorizer.audit import MCPAuditLogger
@@ -29,6 +30,7 @@ class MCPAuthorizer:
         self._policy_engine = policy_engine
         self._audit_logger = audit_logger
         self._finding_service = finding_service or FindingService()
+        self._decision_service = DecisionService()
 
     def authorize(self, session: MCPSession, action: str) -> MCPAuthorizationResult:
         proposed = self._audit_logger.record_proposed(
@@ -66,6 +68,7 @@ class MCPAuthorizer:
                 required_scope.value,
             )
 
+        self._decision_service.create_policy_decision(decision)
         event = self._audit_logger.record_decision(decision)
         finding = None
         if decision.decision == DecisionType.DENY and decision.risk_level in {RiskLevel.HIGH, RiskLevel.CRITICAL}:

@@ -9,6 +9,8 @@ from pydantic import BaseModel
 from pydantic import TypeAdapter
 from pydantic import ValidationError
 
+from pathlib import Path
+from onyx.configs import app_configs
 from onyx.configs.constants import DocumentSource
 from onyx.mcp_server.api import mcp_server
 from onyx.mcp_server.utils import get_http_client
@@ -34,7 +36,7 @@ from onyx.utils.variable_functionality import build_api_server_url_for_http_requ
 logger = setup_logger()
 
 _mcp_authorizer = MCPAuthorizer(
-    policy_engine=PolicyEngine(policies=[]),
+    policy_engine=PolicyEngine.from_directory(Path(app_configs.SECURITY_LAYER_POLICY_PATH)),
     audit_logger=MCPAuditLogger(audit_service=AuditService()),
     finding_service=FindingService(),
 )
@@ -47,8 +49,8 @@ def _authorize_mcp_call(access_token: AccessToken, action: str) -> dict[str, Any
     session = MCPSession(
         client_id=access_token.client_id or "mcp",
         session_id=access_token.token[:12],
-        user_id=access_token.client_id,
-        tenant_id=None,
+        user_id=access_token.client_id or "missing:user",
+        tenant_id=str(getattr(access_token, "tenant_id", None) or access_token.extra.get("tenant_id") if getattr(access_token, "extra", None) else "missing:tenant"),
         scopes=set(access_token.scopes or []),
     )
     result = _mcp_authorizer.authorize(session=session, action=action)

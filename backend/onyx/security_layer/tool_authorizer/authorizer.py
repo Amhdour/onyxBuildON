@@ -8,6 +8,7 @@ from onyx.security_layer.audit.service import AuditService
 from onyx.security_layer.decisions.models import DecisionType
 from onyx.security_layer.decisions.models import RiskLevel
 from onyx.security_layer.decisions.models import SecurityDecision
+from onyx.security_layer.decisions.service import DecisionService
 from onyx.security_layer.findings.models import SecurityFinding
 from onyx.security_layer.findings.service import FindingService
 from onyx.security_layer.tool_authorizer.argument_scanner import scan_tool_arguments
@@ -26,6 +27,7 @@ class ToolAuthorizer:
     def __init__(self, audit_service: AuditService | None = None, finding_service: FindingService | None = None) -> None:
         self.audit_service = audit_service or AuditService()
         self.finding_service = finding_service or FindingService()
+        self.decision_service = DecisionService()
 
     def authorize(
         self,
@@ -73,6 +75,8 @@ class ToolAuthorizer:
             resource_id=tool_name,
             action="execute",
         )
+
+        self.decision_service.create_policy_decision(decision)
 
         event_type = "tool_call_allowed"
         if decision.decision == DecisionType.DENY:
