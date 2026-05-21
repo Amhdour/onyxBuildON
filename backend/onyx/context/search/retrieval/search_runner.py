@@ -19,6 +19,7 @@ from onyx.federated_connectors.federated_retrieval import (
     get_federated_retrieval_functions,
 )
 from onyx.natural_language_processing.search_nlp_models import EmbeddingModel
+from onyx.security_layer.retrieval_guard.guard import apply_retrieval_acl_guard
 from onyx.utils.logger import setup_logger
 from onyx.utils.threadpool_concurrency import run_functions_tuples_in_parallel
 
@@ -94,6 +95,7 @@ def search_chunks(
     db_session: Session | None = None,
     embedding_model: EmbeddingModel | None = None,
     prefetched_federated_retrieval_infos: list[FederatedRetrievalInfo] | None = None,
+    session_id: str | None = None,
 ) -> list[InferenceChunk]:
     run_queries: list[tuple[Callable, tuple]] = []
 
@@ -163,7 +165,14 @@ def search_chunks(
             query_request.filters,
         )
 
-    return top_chunks
+    guard_result = apply_retrieval_acl_guard(
+        top_chunks,
+        tenant_id=query_request.filters.tenant_id or "default",
+        user_id=str(user_id) if user_id is not None else None,
+        session_id=session_id,
+    )
+
+    return guard_result.allowed_chunks
 
 
 # TODO: This is unused code.
