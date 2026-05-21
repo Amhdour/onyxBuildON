@@ -6,6 +6,8 @@ that is consistent across local and Kubernetes sandbox environments.
 
 from typing import Any
 
+from onyx.security_layer.opencode_policy.config_generator import generate_opencode_permissions
+
 
 def build_opencode_config(
     provider: str,
@@ -91,72 +93,64 @@ def build_opencode_config(
     # Add provider to config
     config["provider"][provider] = provider_config
 
-    # Set default tool permissions
-    # Order matters: last matching rule wins
-    # Allow all files first, then deny specific files
-    config["permission"] = {
-        "bash": {
-            # Dangerous commands
-            "rm": "deny",
-            "ssh": "deny",
-            "scp": "deny",
-            "sftp": "deny",
-            "ftp": "deny",
-            "telnet": "deny",
-            "nc": "deny",
-            "netcat": "deny",
-            # Block file reading commands to force use of read tool with permissions
-            "tac": "deny",
-            "nl": "deny",
-            "od": "deny",
-            "xxd": "deny",
-            "hexdump": "deny",
-            "strings": "deny",
-            "base64": "deny",
-            "*": "allow",  # Allow other bash commands
-        },
-        "edit": {
-            "opencode.json": "deny",
-            "**/opencode.json": "deny",
-            "*": "allow",
-        },
-        "write": {
-            "opencode.json": "deny",
-            "**/opencode.json": "deny",
-            "*": "allow",
-        },
-        "read": {
-            "*": "allow",
-            "opencode.json": "deny",
-            "**/opencode.json": "deny",
-        },
-        "grep": {
-            "*": "allow",
-            "opencode.json": "deny",
-            "**/opencode.json": "deny",
-        },
-        "glob": {
-            "*": "allow",
-            "opencode.json": "deny",
-            "**/opencode.json": "deny",
-        },
-        "list": "allow",
-        "lsp": "allow",
-        "patch": "allow",
-        "skill": "allow",
-        "question": "allow",
-        "webfetch": "allow",
-        # External directory permissions:
-        # - dev_mode: Allow all external directories for local development
-        # - Docker/Kubernetes: Deny all external directories by default
-        "external_directory": (
-            "allow"
-            if dev_mode
-            else {
-                "*": "deny",  # Deny all external directories by default
-            }
-        ),
-    }
+    restrictive_permissions = generate_opencode_permissions(dev_mode=dev_mode)
+
+    # Preserve current permissive behavior when policy is disabled.
+    if restrictive_permissions is None:
+        config["permission"] = {
+            "bash": {
+                "rm": "deny",
+                "ssh": "deny",
+                "scp": "deny",
+                "sftp": "deny",
+                "ftp": "deny",
+                "telnet": "deny",
+                "nc": "deny",
+                "netcat": "deny",
+                "tac": "deny",
+                "nl": "deny",
+                "od": "deny",
+                "xxd": "deny",
+                "hexdump": "deny",
+                "strings": "deny",
+                "base64": "deny",
+                "*": "allow",
+            },
+            "edit": {
+                "opencode.json": "deny",
+                "**/opencode.json": "deny",
+                "*": "allow",
+            },
+            "write": {
+                "opencode.json": "deny",
+                "**/opencode.json": "deny",
+                "*": "allow",
+            },
+            "read": {
+                "*": "allow",
+                "opencode.json": "deny",
+                "**/opencode.json": "deny",
+            },
+            "grep": {
+                "*": "allow",
+                "opencode.json": "deny",
+                "**/opencode.json": "deny",
+            },
+            "glob": {
+                "*": "allow",
+                "opencode.json": "deny",
+                "**/opencode.json": "deny",
+            },
+            "list": "allow",
+            "lsp": "allow",
+            "patch": "allow",
+            "skill": "allow",
+            "question": "allow",
+            "webfetch": "allow",
+            "external_directory": ("allow" if dev_mode else {"*": "deny"}),
+        }
+    else:
+        config["permission"] = restrictive_permissions
 
     # Disable specified tools via permissions
     if disabled_tools:
