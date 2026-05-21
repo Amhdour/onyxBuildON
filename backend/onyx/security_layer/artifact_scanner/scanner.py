@@ -9,6 +9,7 @@ from onyx.security_layer.findings.models import FindingSeverity
 from onyx.security_layer.findings.models import SecurityFinding
 from onyx.security_layer.launch_gates.evidence import LaunchGateEvidence
 from onyx.security_layer.artifact_scanner.html import scan_html_signals
+from onyx.security_layer.artifact_scanner.html import scan_hidden_text_prompt_injection
 from onyx.security_layer.artifact_scanner.pii import scan_pii_signals
 from onyx.security_layer.artifact_scanner.provenance import scan_provenance_signals
 from onyx.security_layer.artifact_scanner.secrets import scan_secret_signals
@@ -44,6 +45,7 @@ class ArtifactScanResult(BaseModel):
 
 
 LARGE_EXCERPT_THRESHOLD = 3_000
+HTML_LIKE_TYPES = {"html", "markdown"}
 
 
 def scan_artifact(content: str, metadata: ArtifactMetadata) -> ArtifactScanResult:
@@ -53,11 +55,21 @@ def scan_artifact(content: str, metadata: ArtifactMetadata) -> ArtifactScanResul
     for finding_type, snippet in scan_secret_signals(content):
         blocked_signals.append(SecuritySignal(signal_type=finding_type, severity="high", snippet=snippet))
 
-    html_blocked, html_warned = scan_html_signals(content)
+    artifact_type = metadata.artifact_type.lower()
+
+    html_blocked, html_warned = ([], [])
+    if artifact_type in HTML_LIKE_TYPES:
+        html_blocked, html_warned = scan_html_signals(content)
+
     for finding_type, snippet in html_blocked:
         blocked_signals.append(SecuritySignal(signal_type=finding_type, severity="high", snippet=snippet))
     for finding_type, snippet in html_warned:
         warned_signals.append(SecuritySignal(signal_type=finding_type, severity="medium", snippet=snippet))
+
+    hidden_prompt_injection_signal = scan_hidden_text_prompt_injection(content)
+    if hidden_prompt_injection_signal:
+        finding_type, snippet = hidden_prompt_injection_signal
+        blocked_signals.append(SecuritySignal(signal_type=finding_type, severity="high", snippet=snippet))
 
     for finding_type, snippet in scan_pii_signals(content):
         warned_signals.append(SecuritySignal(signal_type=finding_type, severity="medium", snippet=snippet))

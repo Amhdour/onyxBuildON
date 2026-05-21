@@ -26,6 +26,11 @@ WARN_PATTERNS: dict[str, re.Pattern[str]] = {
     "external_link": re.compile(r"<a[^>]+href=['\"]https?://(?!localhost|127\.0\.0\.1)[^'\"]+['\"]", re.IGNORECASE),
 }
 
+HIDDEN_TEXT_INJECTION_PATTERN = re.compile(
+    r"(?:<!--|/\*|#)\s*(?:ignore\s+previous|system\s+prompt|override\s+instructions)",
+    re.IGNORECASE,
+)
+
 
 def scan_html_signals(content: str) -> tuple[list[tuple[str, str]], list[tuple[str, str]]]:
     blocked: list[tuple[str, str]] = []
@@ -42,3 +47,10 @@ def scan_html_signals(content: str) -> tuple[list[tuple[str, str]], list[tuple[s
             warned.append((finding_type, match.group(0)[:120]))
 
     return blocked, warned
+
+
+def scan_hidden_text_prompt_injection(content: str) -> tuple[str, str] | None:
+    match = HIDDEN_TEXT_INJECTION_PATTERN.search(content)
+    if not match:
+        return None
+    return ("hidden_prompt_injection", match.group(0)[:120])
