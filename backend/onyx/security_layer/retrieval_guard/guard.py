@@ -12,7 +12,7 @@ from onyx.security_layer.mode import is_observe_mode
 from onyx.security_layer.findings.models import FindingSeverity
 from onyx.security_layer.findings.models import SecurityFinding
 from onyx.security_layer.findings.service import FindingService
-from onyx.security_layer.retrieval_guard.acl_verifier import verify_acl_state
+from onyx.security_layer.retrieval_guard.acl_verifier import authorize_retrieved_chunk
 from onyx.security_layer.retrieval_guard.models import ACLState
 from onyx.security_layer.retrieval_guard.models import RetrievalDecision
 from onyx.security_layer.retrieval_guard.models import RetrievalProvenance
@@ -83,7 +83,7 @@ def apply_retrieval_acl_guard(
 
     for chunk in chunks:
         acl_state = _acl_state_for_chunk(chunk, tenant_id)
-        verdict = verify_acl_state(acl_state)
+        verdict = authorize_retrieved_chunk(chunk, acl_state, user_id=safe_user_id, tenant_id=tenant_id)
         permission_source = str(chunk.metadata.get("permission_source", "index_metadata"))
 
         prov = build_provenance(

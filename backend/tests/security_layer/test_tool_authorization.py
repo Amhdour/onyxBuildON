@@ -2,6 +2,7 @@ from onyx.security_layer.audit.service import AuditService
 from onyx.security_layer.decisions.models import DecisionType
 from onyx.security_layer.tool_authorizer.authorizer import ToolAuthorizer
 from onyx.security_layer.tool_authorizer.integration import ToolAuthorizer as IntegrationToolAuthorizer
+from onyx.security_layer.persistence_service import SecurityPersistenceService
 from onyx.security_layer.tool_authorizer.integration import run_tool_authorization_gate
 
 
@@ -208,3 +209,33 @@ def test_approval_lifecycle_allows_once(monkeypatch) -> None:
         merged_tool_call=None,
     )
     assert third.outcome == DecisionType.REQUIRE_APPROVAL
+
+
+def test_persistent_approval_request_created(monkeypatch) -> None:
+    monkeypatch.setenv("SECURITY_LAYER_ENABLED", "true")
+    monkeypatch.setenv("SECURITY_LAYER_MODE", "enforce")
+    calls = {}
+    def _create(self, **kwargs):
+        calls.update(kwargs)
+        class _R: id = "a1"
+        return _R()
+    monkeypatch.setattr(SecurityPersistenceService, "create_approval_request", _create)
+    monkeypatch.setattr(SecurityPersistenceService, "consume_matching_approved_request", lambda self, **kwargs: ("missing", None))
+    run_tool_authorization_gate("write_file", {"path": "/tmp/a"}, "u1", "s1", "t1", None)
+    assert calls["tool_name"] == "write_file"
+    assert calls["tenant_id"] == "t1"
+
+
+def test_approval_replay_hash_expired_denied(monkeypatch) -> None:
+    monkeypatch.setenv("SECURITY_LAYER_ENABLED", "true")
+    monkeypatch.setenv("SECURITY_LAYER_MODE", "enforce")
+    monkeypatch.setattr(SecurityPersistenceService, "consume_matching_approved_request", lambda self, **kwargs: ("approved_and_consumed", type("R", (), {"id": "a1"})()))
+    assert run_tool_authorization_gate("write_file", {"path": "/tmp/a"}, "u1", "s1", "t1", None).outcome == DecisionType.ALLOW
+    monkeypatch.setattr(SecurityPersistenceService, "consume_matching_approved_request", lambda self, **kwargs: ("consumed", type("R", (), {"id": "a1"})()))
+    assert run_tool_authorization_gate("write_file", {"path": "/tmp/a"}, "u1", "s1", "t1", None).outcome == DecisionType.REQUIRE_APPROVAL
+    monkeypatch.setattr(SecurityPersistenceService, "consume_matching_approved_request", lambda self, **kwargs: ("hash_mismatch", type("R", (), {"id": "a2"})()))
+    assert run_tool_authorization_gate("write_file", {"path": "/tmp/b"}, "u1", "s1", "t1", None).outcome == DecisionType.REQUIRE_APPROVAL
+    monkeypatch.setattr(SecurityPersistenceService, "consume_matching_approved_request", lambda self, **kwargs: ("expired", type("R", (), {"id": "a3"})()))
+    assert run_tool_authorization_gate("write_file", {"path": "/tmp/c"}, "u1", "s1", "t1", None).outcome == DecisionType.REQUIRE_APPROVAL
+    monkeypatch.setattr(SecurityPersistenceService, "consume_matching_approved_request", lambda self, **kwargs: ("denied", type("R", (), {"id": "a4"})()))
+    assert run_tool_authorization_gate("write_file", {"path": "/tmp/d"}, "u1", "s1", "t1", None).outcome == DecisionType.REQUIRE_APPROVAL

@@ -103,3 +103,25 @@ def test_security_retrieval_guard_disabled_preserves_existing_behavior(monkeypat
     result = apply_retrieval_acl_guard([_chunk("private_deny")], tenant_id="t1", user_id="u1", session_id="s1")
     assert len(result.allowed_chunks) == 1
     assert len(result.denied_chunks) == 0
+
+
+def test_source_of_truth_deleted_document_denied() -> None:
+    c = _chunk("public")
+    c.metadata["onyx_acl"] = {"tenant_id": "t1", "deleted": True}
+    result = apply_retrieval_acl_guard([c], tenant_id="t1", user_id="u1", session_id="s1")
+    assert len(result.denied_chunks) == 1
+
+
+def test_source_of_truth_group_access_insufficient_denied() -> None:
+    c = _chunk("public")
+    c.metadata["onyx_acl"] = {"tenant_id": "t1", "group_ids": ["g-admin"]}
+    c.metadata["onyx_user_group_ids"] = ["g-user"]
+    result = apply_retrieval_acl_guard([c], tenant_id="t1", user_id="u1", session_id="s1")
+    assert len(result.denied_chunks) == 1
+
+
+def test_retrieval_metadata_fallback_still_works() -> None:
+    c = _chunk("public")
+    c.metadata.pop("onyx_acl", None)
+    result = apply_retrieval_acl_guard([c], tenant_id="t1", user_id="u1", session_id="s1")
+    assert len(result.allowed_chunks) == 1

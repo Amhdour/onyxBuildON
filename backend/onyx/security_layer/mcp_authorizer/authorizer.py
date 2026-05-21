@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 
+from onyx.configs import app_configs
 from onyx.security_layer.decisions.models import DecisionType
 from onyx.security_layer.decisions.models import RiskLevel
 from onyx.security_layer.decisions.models import SecurityDecision
@@ -41,7 +42,20 @@ class MCPAuthorizer:
         )
 
         required_scope = required_scope_for_action(action)
-        if required_scope == MCPScope.ADMIN:
+        missing_context = session.user_id in {"missing:user", "", None} or session.tenant_id in {"missing:tenant", "", None}
+        if app_configs.SECURITY_LAYER_REQUIRE_CONTEXT and missing_context:
+            mode = os.getenv("SECURITY_LAYER_MODE", "observe").lower()
+            context_decision = DecisionType.DENY if mode == "enforce" else DecisionType.ALLOW
+            decision = self._build_decision(
+                session,
+                action,
+                context_decision,
+                RiskLevel.HIGH,
+                "missing required MCP context (user/tenant)",
+                required_scope.value,
+            )
+            decision.evidence["missing_context"] = True
+        elif required_scope == MCPScope.ADMIN:
             decision = self._build_decision(session, action, DecisionType.DENY, RiskLevel.CRITICAL, "mcp:admin denied by policy", required_scope.value)
         elif not session.has_scope(required_scope.value):
             decision = self._build_decision(session, action, DecisionType.DENY, RiskLevel.HIGH, "missing required scope", required_scope.value)
