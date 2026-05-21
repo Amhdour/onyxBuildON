@@ -23,7 +23,7 @@ def verify_chunk_metadata_acl(acl_state: ACLState) -> ChunkACLVerdict:
     )
 
 
-def verify_source_of_truth_acl(chunk: InferenceChunk, user_id: str | None, tenant_id: str | None) -> ChunkACLVerdict | None:
+def verify_embedded_acl_metadata(chunk: InferenceChunk, user_id: str | None, tenant_id: str | None) -> ChunkACLVerdict | None:
     acl = chunk.metadata.get("onyx_acl")
     if not isinstance(acl, dict):
         return None
@@ -40,7 +40,10 @@ def verify_source_of_truth_acl(chunk: InferenceChunk, user_id: str | None, tenan
 
 
 def authorize_retrieved_chunk(chunk: InferenceChunk, acl_state: ACLState, user_id: str | None, tenant_id: str | None) -> ChunkACLVerdict:
-    source_verdict = verify_source_of_truth_acl(chunk, user_id=user_id, tenant_id=tenant_id)
+    source_verdict = verify_embedded_acl_metadata(chunk, user_id=user_id, tenant_id=tenant_id)
     if source_verdict is not None:
         return source_verdict
     return verify_chunk_metadata_acl(acl_state)
+
+
+# TODO: Add DB-backed ACL verification against Onyx permission tables; current checks only evaluate embedded chunk metadata.

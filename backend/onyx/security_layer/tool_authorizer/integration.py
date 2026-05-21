@@ -19,11 +19,11 @@ from onyx.configs import app_configs
 from onyx.security_layer.persistence_service import SecurityPersistenceService
 
 
-def approve_tool_request_once(tool_name: str, tool_args: dict[str, Any], user_id: str, tenant_id: str) -> str:
+def approve_tool_request_once(tool_name: str, tool_args: dict[str, Any], user_id: str, tenant_id: str, session_id: str) -> str:
     row = SecurityPersistenceService().create_approval_request(
         tenant_id=tenant_id,
         user_id=user_id,
-        session_id="manual",
+        session_id=session_id,
         tool_name=tool_name,
         action="execute",
         resource=tool_name,

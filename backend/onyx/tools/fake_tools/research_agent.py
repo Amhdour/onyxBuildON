@@ -183,7 +183,12 @@ def generate_intermediate_report(
                             )
                         ),
                         user_id=str(user_identity.user_id) if user_identity and user_identity.user_id else None,
-                        session_id=None,
+                        session_id=_resolve_nested_tool_session_id(
+                            parent_session_id=user_identity.session_id if user_identity else None,
+                            parent_tool_call_id=parent_tool_call_id,
+                            turn_index=turn_index,
+                            tab_index=tab_index,
+                        ),
                         tenant_id=get_current_tenant_id(),
                     )
                 )
@@ -207,6 +212,12 @@ def generate_intermediate_report(
         return final_report
 
 
+
+
+def _resolve_nested_tool_session_id(parent_session_id: str | None, parent_tool_call_id: str, turn_index: int, tab_index: int) -> str:
+    if parent_session_id:
+        return parent_session_id
+    return f"nested:{parent_tool_call_id}:{turn_index}:{tab_index}"
 def run_research_agent_call(
     research_agent_call: ToolCallKickoff,
     parent_tool_call_id: str,
@@ -406,7 +417,12 @@ def run_research_agent_call(
                             tab_index=tab_index,
                         ),
                         user_id=str(user_identity.user_id) if user_identity and user_identity.user_id else None,
-                        session_id=None,
+                        session_id=_resolve_nested_tool_session_id(
+                            parent_session_id=user_identity.session_id if user_identity else None,
+                            parent_tool_call_id=parent_tool_call_id,
+                            turn_index=turn_index,
+                            tab_index=tab_index,
+                        ),
                         tenant_id=get_current_tenant_id(),
                     )
                     span.span_data.output = final_report if final_report else None
@@ -473,7 +489,12 @@ def run_research_agent_call(
                             ]
                         ),
                         user_id=str(user_identity.user_id) if user_identity and user_identity.user_id else None,
-                        session_id=None,
+                        session_id=_resolve_nested_tool_session_id(
+                            parent_session_id=user_identity.session_id if user_identity else None,
+                            parent_tool_call_id=parent_tool_call_id,
+                            turn_index=turn_index,
+                            tab_index=tab_index,
+                        ),
                         tenant_id=get_current_tenant_id(),
                     )
                     tool_responses = parallel_tool_call_results.tool_responses

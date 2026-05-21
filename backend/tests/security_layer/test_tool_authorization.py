@@ -189,7 +189,7 @@ def test_approval_lifecycle_allows_once(monkeypatch) -> None:
 
     from onyx.security_layer.tool_authorizer.integration import approve_tool_request_once
 
-    approve_tool_request_once("write_file", {"path": "/tmp/a"}, "u1", "t1")
+    approve_tool_request_once("write_file", {"path": "/tmp/a"}, "u1", "t1", "s1")
     second = run_tool_authorization_gate(
         tool_name="write_file",
         tool_args={"path": "/tmp/a"},
@@ -239,3 +239,13 @@ def test_approval_replay_hash_expired_denied(monkeypatch) -> None:
     assert run_tool_authorization_gate("write_file", {"path": "/tmp/c"}, "u1", "s1", "t1", None).outcome == DecisionType.REQUIRE_APPROVAL
     monkeypatch.setattr(SecurityPersistenceService, "consume_matching_approved_request", lambda self, **kwargs: ("denied", type("R", (), {"id": "a4"})()))
     assert run_tool_authorization_gate("write_file", {"path": "/tmp/d"}, "u1", "s1", "t1", None).outcome == DecisionType.REQUIRE_APPROVAL
+
+
+def test_wrong_session_id_blocked(monkeypatch) -> None:
+    monkeypatch.setenv("SECURITY_LAYER_ENABLED", "true")
+    monkeypatch.setenv("SECURITY_LAYER_MODE", "enforce")
+    run_tool_authorization_gate("write_file", {"path": "/tmp/a"}, "u1", "s1", "t1", None)
+    from onyx.security_layer.tool_authorizer.integration import approve_tool_request_once
+    approve_tool_request_once("write_file", {"path": "/tmp/a"}, "u1", "t1", "s2")
+    result = run_tool_authorization_gate("write_file", {"path": "/tmp/a"}, "u1", "s1", "t1", None)
+    assert result.outcome == DecisionType.REQUIRE_APPROVAL

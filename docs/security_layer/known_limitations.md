@@ -20,3 +20,8 @@ If your shell is not already in the project environment, activate `.venv` first:
 - `source .venv/bin/activate`
 
 In restricted environments where package installation is blocked, test execution can fail before collection due to missing Python packages (for example `fastapi-users`). This is an environment limitation, not evidence that security-layer checks are absent.
+
+
+## Retrieval ACL verification scope
+
+Current retrieval ACL verification checks embedded chunk metadata (e.g. `onyx_acl`) and does not query live Onyx DB permission tables as the source of truth.
