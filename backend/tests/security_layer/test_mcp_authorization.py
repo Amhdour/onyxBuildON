@@ -68,3 +68,21 @@ def test_finding_created_for_denied_high_risk_mcp_call() -> None:
 def test_security_mcp_auth_disabled_preserves_existing_behavior(monkeypatch) -> None:
     monkeypatch.setenv("SECURITY_MCP_AUTH_ENABLED", "false")
     assert is_mcp_auth_enabled() is False
+
+
+def test_mcp_missing_context_denied_in_enforce_mode(monkeypatch) -> None:
+    monkeypatch.setenv("SECURITY_LAYER_REQUIRE_CONTEXT", "true")
+    monkeypatch.setenv("SECURITY_LAYER_MODE", "enforce")
+    sess = MCPSession(client_id="c", session_id="s", user_id="missing:user", tenant_id="missing:tenant", scopes={"mcp:use", "mcp:search"})
+    result = _authorizer().authorize(sess, "search_indexed_documents")
+    assert result.outcome == DecisionType.DENY
+
+
+def test_mcp_missing_context_allowed_audited_in_observe_mode(monkeypatch) -> None:
+    monkeypatch.setenv("SECURITY_LAYER_REQUIRE_CONTEXT", "true")
+    monkeypatch.setenv("SECURITY_LAYER_MODE", "observe")
+    audit = AuditService()
+    sess = MCPSession(client_id="c", session_id="s", user_id="missing:user", tenant_id="missing:tenant", scopes={"mcp:use", "mcp:search"})
+    result = _authorizer(audit_service=audit).authorize(sess, "search_indexed_documents")
+    assert result.outcome == DecisionType.ALLOW
+    assert len(audit.list_all()) >= 2

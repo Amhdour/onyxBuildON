@@ -1,11 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC
-from datetime import datetime
-from datetime import timedelta
-import hashlib
-import json
 from typing import Any
 
 from onyx.security_layer.audit.models import AuditEvent
@@ -21,24 +16,21 @@ from onyx.security_layer.mode import is_observe_mode
 from onyx.security_layer.mode import should_fail_closed
 from onyx.security_layer.mode import should_fail_open
 from onyx.configs import app_configs
-
-
-
-
-_APPROVAL_CACHE: dict[str, dict[str, Any]] = {}
-
-
-def _approval_key(tool_name: str, tool_args: dict[str, Any], user_id: str | None, tenant_id: str | None) -> str:
-    payload = json.dumps(tool_args, sort_keys=True, separators=(",", ":"))
-    arg_hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()
-    return f"{tenant_id}:{user_id}:{tool_name}:{arg_hash}"
+from onyx.security_layer.persistence_service import SecurityPersistenceService
 
 
 def approve_tool_request_once(tool_name: str, tool_args: dict[str, Any], user_id: str, tenant_id: str) -> str:
-    key = _approval_key(tool_name, tool_args, user_id, tenant_id)
-    approval_id = f"approval:{hashlib.sha1(key.encode()).hexdigest()}"
-    _APPROVAL_CACHE[key] = {"id": approval_id, "status": "approved", "expires_at": datetime.now(UTC) + timedelta(minutes=10), "consumed": False}
-    return approval_id
+    row = SecurityPersistenceService().create_approval_request(
+        tenant_id=tenant_id,
+        user_id=user_id,
+        session_id="manual",
+        tool_name=tool_name,
+        action="execute",
+        resource=tool_name,
+        tool_args=tool_args,
+    )
+    SecurityPersistenceService().set_approval_status(row.id, "approved")
+    return row.id
 
 
 @dataclass
@@ -148,19 +140,34 @@ def run_tool_authorization_gate(
     }
 
     if result.decision.decision == DecisionType.REQUIRE_APPROVAL:
-        key = _approval_key(tool_name, tool_args, user_id, tenant_id)
-        approval = _APPROVAL_CACHE.get(key)
-        if approval and approval["status"] == "approved" and not approval["consumed"] and approval["expires_at"] > datetime.now(UTC):
-            approval["consumed"] = True
-            audit.record(AuditEvent(event_type="approval_consumed", tenant_id=context.tenant_id, user_id=context.actor_user_id, session_id=context.session_id, decision_id=approval["id"], resource_type="tool", resource_id=tool_name, action="execute", risk_level="medium", details=context.to_audit_metadata()))
+        persistence = SecurityPersistenceService()
+        approval_state, approval_row = persistence.consume_matching_approved_request(
+            tenant_id=tenant_id,
+            user_id=user_id,
+            session_id=session_id,
+            tool_name=tool_name,
+            action="execute",
+            resource=tool_name,
+            tool_args=tool_args,
+        )
+        if approval_state == "approved_and_consumed" and approval_row is not None:
+            audit.record(AuditEvent(event_type="approval_consumed", tenant_id=context.tenant_id, user_id=context.actor_user_id, session_id=context.session_id, decision_id=approval_row.id, resource_type="tool", resource_id=tool_name, action="execute", risk_level="medium", details=context.to_audit_metadata()))
             return ToolAuthorizationGateResult(outcome=DecisionType.ALLOW, audit_events=[proposed_event, result.audit_event], finding=result.finding)
         if is_enforce_mode():
-            if not approval:
-                approval_id = approve_tool_request_once(tool_name, tool_args, user_id or "missing:user", tenant_id or "missing:tenant")
-                _APPROVAL_CACHE[key]["status"] = "pending"
-                audit.record(AuditEvent(event_type="approval_requested", tenant_id=context.tenant_id, user_id=context.actor_user_id, session_id=context.session_id, decision_id=approval_id, resource_type="tool", resource_id=tool_name, action="execute", risk_level="high", details=context.to_audit_metadata()))
+            if approval_state == "missing":
+                new_req = persistence.create_approval_request(
+                    tenant_id=tenant_id,
+                    user_id=user_id,
+                    session_id=session_id,
+                    tool_name=tool_name,
+                    action="execute",
+                    resource=tool_name,
+                    tool_args=tool_args,
+                )
+                audit.record(AuditEvent(event_type="approval_requested", tenant_id=context.tenant_id, user_id=context.actor_user_id, session_id=context.session_id, decision_id=new_req.id, resource_type="tool", resource_id=tool_name, action="execute", risk_level="high", details={**context.to_audit_metadata(), "approval_state": approval_state}))
             else:
-                audit.record(AuditEvent(event_type="approval_denied", tenant_id=context.tenant_id, user_id=context.actor_user_id, session_id=context.session_id, decision_id=approval["id"], resource_type="tool", resource_id=tool_name, action="execute", risk_level="high", details=context.to_audit_metadata()))
+                event_type = "approval_denied" if approval_state == "denied" else "approval_expired" if approval_state == "expired" else "approval_consumed"
+                audit.record(AuditEvent(event_type=event_type, tenant_id=context.tenant_id, user_id=context.actor_user_id, session_id=context.session_id, decision_id=approval_row.id if approval_row else "missing", resource_type="tool", resource_id=tool_name, action="execute", risk_level="high", details={**context.to_audit_metadata(), "approval_state": approval_state}))
             return ToolAuthorizationGateResult(outcome=DecisionType.REQUIRE_APPROVAL, audit_events=[proposed_event, result.audit_event], finding=result.finding)
 
     if is_observe_mode():
