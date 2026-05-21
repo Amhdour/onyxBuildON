@@ -460,9 +460,9 @@ def run_tool_calls(
             audit_service.record(
                 AuditEvent(
                     event_type="tool_call_executed",
-                    tenant_id="default",
-                    user_id="unknown",
-                    session_id="default",
+                    tenant_id=None,
+                    user_id=None,
+                    session_id=None,
                     decision_id="executed",
                     resource_type="tool",
                     resource_id=result.tool_call.tool_name,
