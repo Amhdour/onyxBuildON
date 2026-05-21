@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 
 from onyx.auth.permissions import require_permission
 from onyx.configs.app_configs import SECURITY_LAYER_ENABLED
+from onyx.security_layer.mode import get_security_layer_mode
 from onyx.db.enums import Permission
 from onyx.db.models import User
 from onyx.security_layer.findings.service import FindingService
@@ -23,7 +24,7 @@ def get_security_overview(_: User = Depends(require_permission(Permission.FULL_A
     denied_mcp = persistence.list_mcp_events({"tenant_id": tenant_id, "decision": "deny"}, 10, 0)
     return {
         "security_layer_enabled": SECURITY_LAYER_ENABLED,
-        "policy_mode": PolicyMode.ENFORCE.value if SECURITY_LAYER_ENABLED else PolicyMode.OBSERVE.value,
+        "policy_mode": PolicyMode(get_security_layer_mode()).value if SECURITY_LAYER_ENABLED else PolicyMode.OBSERVE.value,
         "open_findings_count": sum(1 for finding in findings if finding.status == "open"),
         "critical_findings_count": sum(1 for finding in findings if finding.severity == "critical"),
         "high_findings_count": sum(1 for finding in findings if finding.severity == "high"),
