@@ -68,8 +68,8 @@ def apply_retrieval_acl_guard(
 
     audit = audit_service or AuditService()
     finding_svc = finding_service or FindingService()
-    safe_user_id = user_id or "unknown"
-    safe_session_id = session_id or "default"
+    safe_user_id = user_id
+    safe_session_id = session_id
 
     allowed: list[InferenceChunk] = []
     denied: list[InferenceChunk] = []
@@ -124,8 +124,8 @@ def apply_retrieval_acl_guard(
             AuditEvent(
                 event_type=event_type,
                 tenant_id=tenant_id,
-                user_id=safe_user_id,
-                session_id=safe_session_id,
+                user_id=safe_user_id or "missing",
+                session_id=safe_session_id or "missing",
                 decision_id=f"retrieval-{chunk.document_id}-{chunk.chunk_id}",
                 resource_type="chunk",
                 resource_id=f"{chunk.document_id}:{chunk.chunk_id}",

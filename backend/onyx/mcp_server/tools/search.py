@@ -47,8 +47,8 @@ def _authorize_mcp_call(access_token: AccessToken, action: str) -> dict[str, Any
     session = MCPSession(
         client_id=access_token.client_id or "mcp",
         session_id=access_token.token[:12],
-        user_id=access_token.client_id or "unknown",
-        tenant_id="default",
+        user_id=access_token.client_id,
+        tenant_id=None,
         scopes=set(access_token.scopes or []),
     )
     result = _mcp_authorizer.authorize(session=session, action=action)

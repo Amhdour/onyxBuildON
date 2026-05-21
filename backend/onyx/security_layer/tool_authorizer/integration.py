@@ -8,6 +8,7 @@ from onyx.security_layer.audit.models import AuditEvent
 from onyx.security_layer.audit.service import AuditService
 from onyx.security_layer.decisions.models import DecisionType
 from onyx.security_layer.findings.models import SecurityFinding
+from onyx.security_layer.context import SecurityContext
 from onyx.security_layer.tool_authorizer.authorizer import ToolAuthorizationResult
 from onyx.security_layer.tool_authorizer.authorizer import ToolAuthorizer
 
@@ -34,20 +35,48 @@ def run_tool_authorization_gate(
 
     audit = audit_service or AuditService()
 
+    context = SecurityContext(
+        actor_user_id=user_id,
+        tenant_id=tenant_id,
+        session_id=session_id,
+        surface="tool_execution",
+        action="execute",
+        resource_type="tool",
+        resource_id=tool_name,
+        tool_name=tool_name,
+        metadata={"merged": merged_tool_call is not None},
+    )
     proposed_event = audit.record(
         AuditEvent(
             event_type="tool_call_proposed",
-            tenant_id=tenant_id or "default",
-            user_id=user_id or "unknown",
-            session_id=session_id or "default",
+            tenant_id=context.tenant_id,
+            user_id=context.actor_user_id,
+            session_id=context.session_id,
             decision_id="pending",
             resource_type="tool",
             resource_id=tool_name,
             action="execute",
             risk_level="unknown",
-            details={"merged": merged_tool_call is not None},
+            details=context.to_audit_metadata(),
         )
     )
+
+    if not context.has_required_context():
+        blocked_event = audit.record(
+            AuditEvent(
+                event_type="tool_call_denied_missing_context",
+                tenant_id=context.tenant_id,
+                user_id=context.actor_user_id,
+                session_id=context.session_id,
+                decision_id="default:missing_context:deny",
+                resource_type="tool",
+                resource_id=tool_name,
+                action="execute",
+                risk_level="high",
+                details=context.to_audit_metadata(),
+            )
+        )
+        return ToolAuthorizationGateResult(outcome=DecisionType.DENY, audit_events=[proposed_event, blocked_event], finding=None)
 
     if not security_enabled:
         return ToolAuthorizationGateResult(outcome=DecisionType.ALLOW, audit_events=[proposed_event], finding=None)

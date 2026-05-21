@@ -5,6 +5,7 @@ from onyx.db.enums import Permission
 from onyx.db.models import User
 from onyx.security_layer.audit.service import AuditService
 from shared_configs.contextvars import get_current_tenant_id
+from onyx.server.security.serializers import serialize_security_row
 
 router = APIRouter(prefix="/sandbox")
 
