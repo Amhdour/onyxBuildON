@@ -30,4 +30,7 @@ class PolicyRule(BaseModel):
 class PolicyDefinition(BaseModel):
     policy_id: str
     mode: PolicyMode = PolicyMode.OBSERVE
+    policy_version: str = "v1"
+    surface: str | None = None
+    default_decision: RuleDecision = RuleDecision.DENY
     rules: list[PolicyRule] = Field(default_factory=list)
