@@ -1,0 +1,13 @@
+{
+  "attack_id": "retrieval_unauthorized_doc_attempt",
+  "scenario": {
+    "requesting_tenant": "tenant_a",
+    "document_tenant": "tenant_b",
+    "document_acl": "private_deny"
+  },
+  "expected": {
+    "decision": "deny",
+    "acl_proof_logged": true,
+    "finding": true
+  }
+}
