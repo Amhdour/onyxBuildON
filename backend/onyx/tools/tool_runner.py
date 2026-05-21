@@ -34,6 +34,10 @@ from onyx.tools.tool_implementations.open_url.open_url_tool import OpenURLTool
 from onyx.tools.tool_implementations.python.python_tool import PythonTool
 from onyx.tools.tool_implementations.search.search_tool import SearchTool
 from onyx.tools.tool_implementations.web_search.web_search_tool import WebSearchTool
+from onyx.security_layer.audit.models import AuditEvent
+from onyx.security_layer.audit.service import AuditService
+from onyx.security_layer.decisions.models import DecisionType
+from onyx.security_layer.tool_authorizer.integration import run_tool_authorization_gate
 from onyx.tracing.framework.create import function_span
 from onyx.tracing.framework.spans import SpanError
 from onyx.utils.logger import setup_logger
@@ -335,7 +339,28 @@ def run_tool_calls(
     # Each tool gets a unique starting citation number to avoid conflicts when running in parallel
     tool_run_params: list[tuple[Tool, ToolCallKickoff, Any]] = []
 
+    audit_service = AuditService()
+
+    authorized_tool_calls: list[ToolCallKickoff] = []
     for tool_call in filtered_tool_calls:
+        gate_result = run_tool_authorization_gate(
+            tool_name=tool_call.tool_name,
+            tool_args=tool_call.tool_args,
+            user_id=None,
+            session_id=None,
+            tenant_id=None,
+            merged_tool_call=tool_call.model_dump(),
+            audit_service=audit_service,
+        )
+        if gate_result.outcome == DecisionType.DENY:
+            logger.warning("Tool call denied by security layer: %s", tool_call.tool_name)
+            continue
+        if gate_result.outcome == DecisionType.REQUIRE_APPROVAL:
+            logger.warning("Tool call requires approval by security layer: %s", tool_call.tool_name)
+            continue
+        authorized_tool_calls.append(tool_call)
+
+    for tool_call in authorized_tool_calls:
         tool = tools_by_name[tool_call.tool_name]
 
         # Emit the tool start packet before running the tool
@@ -431,6 +456,21 @@ def run_tool_calls(
 
     # Process results and update citation_mapping
     for result in tool_run_results:
+        if result is not None and result.tool_call is not None:
+            audit_service.record(
+                AuditEvent(
+                    event_type="tool_call_executed",
+                    tenant_id="default",
+                    user_id="unknown",
+                    session_id="default",
+                    decision_id="executed",
+                    resource_type="tool",
+                    resource_id=result.tool_call.tool_name,
+                    action="execute",
+                    risk_level="unknown",
+                    details={"tool_call_id": result.tool_call.tool_call_id},
+                )
+            )
         if result is None:
             continue
 
