@@ -92,3 +92,74 @@ class SecurityLaunchGateRun(Base):
     tenant_id: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
     correlation_id: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+
+
+class SecurityFinding(Base):
+    __tablename__ = "security_findings"
+    id: Mapped[str] = mapped_column(Text, primary_key=True, default=lambda: str(uuid4()))
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    severity: Mapped[str] = mapped_column(Text, index=True)
+    status: Mapped[str] = mapped_column(Text, index=True)
+    source: Mapped[str] = mapped_column(Text, index=True)
+    surface: Mapped[str | None] = mapped_column(Text, nullable=True)
+    rule_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    policy_version: Mapped[str | None] = mapped_column(Text, nullable=True)
+    actor_user_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    tenant_id: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
+    session_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    correlation_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    evidence_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    remediation: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SecurityArtifactScan(Base):
+    __tablename__ = "security_artifact_scans"
+    id: Mapped[str] = mapped_column(Text, primary_key=True, default=lambda: str(uuid4()))
+    artifact_id: Mapped[str] = mapped_column(Text, index=True)
+    artifact_type: Mapped[str | None] = mapped_column(Text, nullable=True)
+    decision: Mapped[str] = mapped_column(Text, index=True)
+    risk_level: Mapped[str | None] = mapped_column(Text, nullable=True)
+    scanner_version: Mapped[str | None] = mapped_column(Text, nullable=True)
+    findings_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    actor_user_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    tenant_id: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
+    session_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    correlation_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+
+
+class SecurityRetrievalEvent(Base):
+    __tablename__ = "security_retrieval_events"
+    id: Mapped[str] = mapped_column(Text, primary_key=True, default=lambda: str(uuid4()))
+    query_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    document_id: Mapped[str] = mapped_column(Text, index=True)
+    chunk_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    connector_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    decision: Mapped[str] = mapped_column(Text, index=True)
+    reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    acl_proof_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    actor_user_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    tenant_id: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
+    session_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    correlation_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+
+
+class SecurityMCPEvent(Base):
+    __tablename__ = "security_mcp_events"
+    id: Mapped[str] = mapped_column(Text, primary_key=True, default=lambda: str(uuid4()))
+    mcp_server: Mapped[str] = mapped_column(Text, index=True)
+    mcp_tool: Mapped[str | None] = mapped_column(Text, nullable=True)
+    scope: Mapped[str | None] = mapped_column(Text, nullable=True)
+    action: Mapped[str] = mapped_column(Text)
+    decision: Mapped[str] = mapped_column(Text, index=True)
+    reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    actor_user_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    tenant_id: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
+    session_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    correlation_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    context_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
