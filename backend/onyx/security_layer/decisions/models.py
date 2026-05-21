@@ -29,9 +29,9 @@ class SecurityDecision(BaseModel):
     matched_rules: list[str] = Field(default_factory=list)
     evidence: dict[str, str | int | float | bool | None] = Field(default_factory=dict)
     subject_type: str
-    subject_id: str
-    tenant_id: str
-    session_id: str
+    subject_id: str | None
+    tenant_id: str | None
+    session_id: str | None
     resource_type: str
     resource_id: str
     action: str

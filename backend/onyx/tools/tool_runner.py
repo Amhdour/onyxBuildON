@@ -42,6 +42,7 @@ from onyx.tracing.framework.create import function_span
 from onyx.tracing.framework.spans import SpanError
 from onyx.utils.logger import setup_logger
 from onyx.utils.threadpool_concurrency import run_functions_tuples_in_parallel
+from shared_configs.contextvars import get_current_tenant_id
 
 logger = setup_logger()
 
@@ -250,6 +251,9 @@ def run_tool_calls(
     # When False, don't pass memory context to search tools for query expansion
     # (but still pass it to the memory tool for persistence)
     inject_memories_in_prompt: bool = True,
+    user_id: str | None = None,
+    session_id: str | None = None,
+    tenant_id: str | None = None,
 ) -> ParallelToolCallResponse:
     """Run (optionally merged) tool calls in parallel and update citation mappings.
 
@@ -346,9 +350,9 @@ def run_tool_calls(
         gate_result = run_tool_authorization_gate(
             tool_name=tool_call.tool_name,
             tool_args=tool_call.tool_args,
-            user_id=None,
-            session_id=None,
-            tenant_id=None,
+            user_id=user_id or (str(user_memory_context.user_id) if user_memory_context and user_memory_context.user_id else "missing:user"),
+            session_id=session_id or "missing:session",
+            tenant_id=tenant_id or get_current_tenant_id() or "missing:tenant",
             merged_tool_call=tool_call.model_dump(),
             audit_service=audit_service,
         )
@@ -460,9 +464,9 @@ def run_tool_calls(
             audit_service.record(
                 AuditEvent(
                     event_type="tool_call_executed",
-                    tenant_id=None,
-                    user_id=None,
-                    session_id=None,
+                    tenant_id=tenant_id or get_current_tenant_id() or "missing:tenant",
+                    user_id=user_id or (str(user_memory_context.user_id) if user_memory_context and user_memory_context.user_id else "missing:user"),
+                    session_id=session_id or "missing:session",
                     decision_id="executed",
                     resource_type="tool",
                     resource_id=result.tool_call.tool_name,
