@@ -9,11 +9,12 @@ from onyx.db.engine.sql_engine import get_session_with_current_tenant
 from onyx.db.security_layer import SecurityAuditEvent
 from onyx.security_layer.audit.models import AuditEvent
 from onyx.security_layer.audit.redaction import redact_details
+from onyx.security_layer.redaction import redact_security_payload
 
 
 class AuditService:
     def create_audit_event(self, event: AuditEvent) -> AuditEvent:
-        event.details = redact_details(event.details)
+        event.details = redact_security_payload(redact_details(event.details))
         with get_session_with_current_tenant() as db_session:
             db_session.add(
                 SecurityAuditEvent(
@@ -45,6 +46,10 @@ class AuditService:
             stmt = select(SecurityAuditEvent).order_by(SecurityAuditEvent.created_at.desc()).limit(limit).offset(offset)
             if tenant_id := filters.get("tenant_id"):
                 stmt = stmt.where(SecurityAuditEvent.tenant_id == str(tenant_id))
+            if correlation_id := filters.get("correlation_id"):
+                stmt = stmt.where(SecurityAuditEvent.correlation_id == str(correlation_id))
+            if surface := filters.get("surface"):
+                stmt = stmt.where(SecurityAuditEvent.resource_type == str(surface))
             rows = db_session.execute(stmt).scalars().all()
         return [{"id": r.id, "event_type": r.event_type, "severity": r.severity, "tenant_id": r.tenant_id, "actor_user_id": r.actor_user_id, "created_at": r.created_at.isoformat()} for r in rows]
 

@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from onyx.server.security.approvals import router as approvals_router
 from onyx.server.security.artifacts import router as artifacts_router
 from onyx.server.security.audit import router as audit_router
 from onyx.server.security.findings import router as findings_router
@@ -13,6 +14,7 @@ from onyx.server.security.tools import router as tools_router
 
 router = APIRouter(prefix="/security")
 router.include_router(overview_router)
+router.include_router(approvals_router)
 router.include_router(findings_router)
 router.include_router(audit_router)
 router.include_router(tools_router)
