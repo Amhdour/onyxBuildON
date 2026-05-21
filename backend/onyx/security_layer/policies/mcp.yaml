@@ -1,4 +1,7 @@
 policy_id: mcp_policy
+surface: mcp
+default_decision: deny
+policy_version: v1
 mode: observe
 
 scopes:

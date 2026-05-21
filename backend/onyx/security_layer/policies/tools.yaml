@@ -1,4 +1,7 @@
 policy_id: tools_policy
+surface: tool
+default_decision: deny
+policy_version: v1
 mode: observe
 
 tool_risk_classes:
