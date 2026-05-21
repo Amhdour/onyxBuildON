@@ -24,4 +24,4 @@ In restricted environments where package installation is blocked, test execution
 
 ## Retrieval ACL verification scope
 
-Current retrieval ACL verification checks embedded chunk metadata (e.g. `onyx_acl`) and does not query live Onyx DB permission tables as the source of truth.
+Current retrieval ACL verification checks embedded chunk metadata (e.g. `onyx_acl`) and does not query live Onyx DB permission tables for authoritative verification yet.

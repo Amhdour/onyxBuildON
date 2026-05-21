@@ -100,3 +100,21 @@ def test_tenant_id_from_token_extra(monkeypatch) -> None:
     monkeypatch.setenv("SECURITY_MCP_AUTH_ENABLED", "true")
     token = SimpleNamespace(client_id="u1", token="tok123456789", scopes=["mcp:use", "mcp:search"], tenant_id=None, extra={"tenant_id": "tenant-extra"})
     assert _authorize_mcp_call(token, "search_indexed_documents") is None
+
+
+def test_missing_tenant_allowed_and_audited_in_observe_mode(monkeypatch) -> None:
+    monkeypatch.setenv("SECURITY_MCP_AUTH_ENABLED", "true")
+    monkeypatch.setenv("SECURITY_LAYER_REQUIRE_CONTEXT", "true")
+    monkeypatch.setenv("SECURITY_LAYER_MODE", "observe")
+    token = SimpleNamespace(client_id="u1", token="tok123456789", scopes=["mcp:use", "mcp:search"], tenant_id=None, extra={})
+    assert _authorize_mcp_call(token, "search_indexed_documents") is None
+
+
+def test_missing_tenant_denied_in_enforce_mode_with_required_context(monkeypatch) -> None:
+    monkeypatch.setenv("SECURITY_MCP_AUTH_ENABLED", "true")
+    monkeypatch.setenv("SECURITY_LAYER_REQUIRE_CONTEXT", "true")
+    monkeypatch.setenv("SECURITY_LAYER_MODE", "enforce")
+    token = SimpleNamespace(client_id="u1", token="tok123456789", scopes=["mcp:use", "mcp:search"], tenant_id=None, extra={})
+    result = _authorize_mcp_call(token, "search_indexed_documents")
+    assert result is not None
+    assert result["error"].startswith("MCP authorization blocked action: deny")

@@ -28,15 +28,15 @@ def verify_embedded_acl_metadata(chunk: InferenceChunk, user_id: str | None, ten
     if not isinstance(acl, dict):
         return None
     if tenant_id and acl.get("tenant_id") and str(acl.get("tenant_id")) != str(tenant_id):
-        return ChunkACLVerdict(decision=RetrievalDecision.DENY, reason="source_of_truth tenant mismatch", acl_state=ACLState.CROSS_TENANT)
+        return ChunkACLVerdict(decision=RetrievalDecision.DENY, reason="embedded_acl tenant mismatch", acl_state=ACLState.CROSS_TENANT)
     if acl.get("deleted") is True:
-        return ChunkACLVerdict(decision=RetrievalDecision.DENY, reason="source_of_truth deleted document", acl_state=ACLState.DELETED_PENDING_PRUNE)
+        return ChunkACLVerdict(decision=RetrievalDecision.DENY, reason="embedded_acl deleted document", acl_state=ACLState.DELETED_PENDING_PRUNE)
     allowed_users = set(str(v) for v in acl.get("user_ids", []))
     allowed_groups = set(str(v) for v in acl.get("group_ids", []))
     user_groups = set(str(v) for v in chunk.metadata.get("onyx_user_group_ids", []))
     if user_id and (user_id in allowed_users or (allowed_groups and (allowed_groups & user_groups))):
-        return ChunkACLVerdict(decision=RetrievalDecision.ALLOW, reason="source_of_truth grant", acl_state=ACLState.PRIVATE_ALLOW)
-    return ChunkACLVerdict(decision=RetrievalDecision.DENY, reason="source_of_truth denied", acl_state=ACLState.PRIVATE_DENY)
+        return ChunkACLVerdict(decision=RetrievalDecision.ALLOW, reason="embedded_acl grant", acl_state=ACLState.PRIVATE_ALLOW)
+    return ChunkACLVerdict(decision=RetrievalDecision.DENY, reason="embedded_acl denied", acl_state=ACLState.PRIVATE_DENY)
 
 
 def authorize_retrieved_chunk(chunk: InferenceChunk, acl_state: ACLState, user_id: str | None, tenant_id: str | None) -> ChunkACLVerdict:

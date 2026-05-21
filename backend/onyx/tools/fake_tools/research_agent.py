@@ -182,14 +182,6 @@ def generate_intermediate_report(
                                 citation_processor.get_seen_citations().values()
                             )
                         ),
-                        user_id=str(user_identity.user_id) if user_identity and user_identity.user_id else None,
-                        session_id=_resolve_nested_tool_session_id(
-                            parent_session_id=user_identity.session_id if user_identity else None,
-                            parent_tool_call_id=parent_tool_call_id,
-                            turn_index=turn_index,
-                            tab_index=tab_index,
-                        ),
-                        tenant_id=get_current_tenant_id(),
                     )
                 )
                 emitter.emit(
@@ -416,14 +408,6 @@ def run_research_agent_call(
                             turn_index=turn_index,
                             tab_index=tab_index,
                         ),
-                        user_id=str(user_identity.user_id) if user_identity and user_identity.user_id else None,
-                        session_id=_resolve_nested_tool_session_id(
-                            parent_session_id=user_identity.session_id if user_identity else None,
-                            parent_tool_call_id=parent_tool_call_id,
-                            turn_index=turn_index,
-                            tab_index=tab_index,
-                        ),
-                        tenant_id=get_current_tenant_id(),
                     )
                     span.span_data.output = final_report if final_report else None
                     return ResearchAgentCallResult(
