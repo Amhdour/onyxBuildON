@@ -1,0 +1,21 @@
+name: PR AI Security Gates
+
+on:
+  pull_request:
+    paths:
+      - "backend/onyx/security_layer/**"
+      - "backend/tests/unit/onyx/security_layer/**"
+      - "web/src/app/admin/security/**"
+
+jobs:
+  security-layer-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install test deps
+        run: pip install pytest pyyaml pydantic
+      - name: Run security layer tests
+        run: pytest -xv backend/tests/unit/onyx/security_layer

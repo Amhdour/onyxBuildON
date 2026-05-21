@@ -1,0 +1,16 @@
+name: Nightly AI Security Demo Attacks
+
+on:
+  schedule:
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+
+jobs:
+  run-demo-attacks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate demo attack pack exists
+        run: test -f demo/security_attacks/demo_attack_pack.yaml
+      - name: Print attack scenarios
+        run: cat demo/security_attacks/demo_attack_pack.yaml
