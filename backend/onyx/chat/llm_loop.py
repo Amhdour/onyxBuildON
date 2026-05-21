@@ -935,6 +935,9 @@ def run_llm_loop(
                 chat_files=chat_files,
                 url_snippet_map=extract_url_snippet_map(gathered_documents or []),
                 inject_memories_in_prompt=inject_memories_in_prompt,
+                user_id=str(user_identity.user_id) if user_identity and user_identity.user_id else None,
+                session_id=chat_session_id,
+                tenant_id=get_current_tenant_id(),
             )
             tool_responses = parallel_tool_call_results.tool_responses
             citation_mapping = parallel_tool_call_results.updated_citation_mapping

@@ -32,9 +32,9 @@ class SecurityContext:
         if not self.correlation_id:
             self.correlation_id = str(uuid4())
         self.missing_context = {
-            "missing_user": self.actor_user_id is None,
-            "missing_tenant": self.tenant_id is None,
-            "missing_session": self.session_id is None,
+            "missing_user": (self.actor_user_id is None) or str(self.actor_user_id).startswith("missing:"),
+            "missing_tenant": (self.tenant_id is None) or str(self.tenant_id).startswith("missing:"),
+            "missing_session": (self.session_id is None) or str(self.session_id).startswith("missing:"),
         }
 
     def requires_user_context(self) -> bool:
