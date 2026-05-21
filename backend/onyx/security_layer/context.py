@@ -43,12 +43,18 @@ class SecurityContext:
     def requires_tenant_context(self) -> bool:
         return self.surface in {"tool_execution", "mcp", "retrieval", "artifact", "sandbox"}
 
-    def has_required_context(self) -> bool:
+    def missing_required_context_reasons(self) -> list[str]:
+        reasons: list[str] = []
         if self.requires_user_context() and self.missing_context["missing_user"]:
-            return False
+            reasons.append("missing_user_context")
         if self.requires_tenant_context() and self.missing_context["missing_tenant"]:
-            return False
-        return True
+            reasons.append("missing_tenant_context")
+        if self.missing_context["missing_session"]:
+            reasons.append("missing_session_context")
+        return reasons
+
+    def has_required_context(self) -> bool:
+        return len(self.missing_required_context_reasons()) == 0
 
     def to_policy_context(self) -> dict[str, Any]:
         return self.to_redacted_dict()

@@ -167,7 +167,7 @@ def search_chunks(
 
     guard_result = apply_retrieval_acl_guard(
         top_chunks,
-        tenant_id=query_request.filters.tenant_id or "default",
+        tenant_id=query_request.filters.tenant_id,
         user_id=str(user_id) if user_id is not None else None,
         session_id=session_id,
     )

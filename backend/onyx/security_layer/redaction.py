@@ -7,18 +7,25 @@ _REDACTED = "[REDACTED]"
 _KEYWORDS = (
     "api_key",
     "apikey",
+    "access_token",
+    "refresh_token",
+    "session_token",
     "token",
     "password",
+    "passwd",
     "secret",
     "private_key",
     "authorization",
     "cookie",
-    "session",
     "bearer",
 )
 
 _BEARER_RE = re.compile(r"bearer\s+[a-z0-9_\-\.]+", re.IGNORECASE)
-_GENERIC_SECRET_RE = re.compile(r"(sk-[a-z0-9\-]{8,}|api[_-]?key\s*[:=]\s*\S+)", re.IGNORECASE)
+_OPENAI_RE = re.compile(r"\bsk-[a-zA-Z0-9\-_]{12,}\b")
+_AWS_RE = re.compile(r"\b(AKIA|ASIA)[A-Z0-9]{16}\b")
+_JWT_RE = re.compile(r"\beyJ[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+\b")
+_GENERIC_SECRET_RE = re.compile(r"(api[_-]?key\s*[:=]\s*\S+|password\s*[:=]\s*\S+)", re.IGNORECASE)
+_DEMO_SECRET_RE = re.compile(r"\b(?:demo|fake|test)[_-]?(?:secret|token|key)\b", re.IGNORECASE)
 
 
 def _needs_redaction_key(key: str) -> bool:
@@ -27,10 +34,12 @@ def _needs_redaction_key(key: str) -> bool:
 
 
 def _redact_string(value: str) -> str:
-    redacted = _BEARER_RE.sub(_REDACTED, value)
-    redacted = _GENERIC_SECRET_RE.sub(_REDACTED, redacted)
     if "-----BEGIN" in value and "PRIVATE KEY-----" in value:
         return _REDACTED
+
+    redacted = value
+    for pattern in (_BEARER_RE, _OPENAI_RE, _AWS_RE, _JWT_RE, _GENERIC_SECRET_RE, _DEMO_SECRET_RE):
+        redacted = pattern.sub(_REDACTED, redacted)
     return redacted
 
 
