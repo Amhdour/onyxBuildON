@@ -67,6 +67,7 @@ from onyx.tools.tool_implementations.search.search_tool import SearchTool
 from onyx.tools.tool_implementations.web_search.utils import extract_url_snippet_map
 from onyx.tools.tool_implementations.web_search.web_search_tool import WebSearchTool
 from onyx.tools.tool_runner import run_tool_calls
+from shared_configs.contextvars import get_current_tenant_id
 from onyx.tools.utils import generate_tools_description
 from onyx.tracing.framework.create import function_span
 from onyx.utils.logger import setup_logger
@@ -181,6 +182,9 @@ def generate_intermediate_report(
                                 citation_processor.get_seen_citations().values()
                             )
                         ),
+                        user_id=str(user_identity.user_id) if user_identity and user_identity.user_id else None,
+                        session_id=None,
+                        tenant_id=get_current_tenant_id(),
                     )
                 )
                 emitter.emit(
@@ -401,6 +405,9 @@ def run_research_agent_call(
                             turn_index=turn_index,
                             tab_index=tab_index,
                         ),
+                        user_id=str(user_identity.user_id) if user_identity and user_identity.user_id else None,
+                        session_id=None,
+                        tenant_id=get_current_tenant_id(),
                     )
                     span.span_data.output = final_report if final_report else None
                     return ResearchAgentCallResult(
@@ -465,6 +472,9 @@ def run_research_agent_call(
                                 for search_doc in tool_call.search_docs
                             ]
                         ),
+                        user_id=str(user_identity.user_id) if user_identity and user_identity.user_id else None,
+                        session_id=None,
+                        tenant_id=get_current_tenant_id(),
                     )
                     tool_responses = parallel_tool_call_results.tool_responses
                     citation_mapping = (

@@ -155,3 +155,56 @@ def test_exception_in_enforce_mode_denies_when_fail_closed(monkeypatch) -> None:
         merged_tool_call=None,
     )
     assert result.outcome == DecisionType.DENY
+
+
+def test_enforce_mode_blocks_missing_required_context(monkeypatch) -> None:
+    monkeypatch.setenv("SECURITY_LAYER_ENABLED", "true")
+    monkeypatch.setenv("SECURITY_LAYER_MODE", "enforce")
+    monkeypatch.setenv("SECURITY_LAYER_REQUIRE_CONTEXT", "true")
+    result = run_tool_authorization_gate(
+        tool_name="read_file",
+        tool_args={},
+        user_id="missing:user",
+        session_id="s1",
+        tenant_id="missing:tenant",
+        merged_tool_call=None,
+    )
+    assert result.outcome == DecisionType.DENY
+
+
+def test_approval_lifecycle_allows_once(monkeypatch) -> None:
+    monkeypatch.setenv("SECURITY_LAYER_ENABLED", "true")
+    monkeypatch.setenv("SECURITY_LAYER_MODE", "enforce")
+
+    first = run_tool_authorization_gate(
+        tool_name="write_file",
+        tool_args={"path": "/tmp/a"},
+        user_id="u1",
+        session_id="s1",
+        tenant_id="t1",
+        merged_tool_call=None,
+    )
+    assert first.outcome == DecisionType.REQUIRE_APPROVAL
+
+    from onyx.security_layer.tool_authorizer.integration import approve_tool_request_once
+
+    approve_tool_request_once("write_file", {"path": "/tmp/a"}, "u1", "t1")
+    second = run_tool_authorization_gate(
+        tool_name="write_file",
+        tool_args={"path": "/tmp/a"},
+        user_id="u1",
+        session_id="s1",
+        tenant_id="t1",
+        merged_tool_call=None,
+    )
+    assert second.outcome == DecisionType.ALLOW
+
+    third = run_tool_authorization_gate(
+        tool_name="write_file",
+        tool_args={"path": "/tmp/a"},
+        user_id="u1",
+        session_id="s1",
+        tenant_id="t1",
+        merged_tool_call=None,
+    )
+    assert third.outcome == DecisionType.REQUIRE_APPROVAL
