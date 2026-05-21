@@ -1,6 +1,7 @@
 from onyx.security_layer.audit.service import AuditService
 from onyx.security_layer.decisions.models import DecisionType
 from onyx.security_layer.tool_authorizer.authorizer import ToolAuthorizer
+from onyx.security_layer.tool_authorizer.integration import ToolAuthorizer as IntegrationToolAuthorizer
 from onyx.security_layer.tool_authorizer.integration import run_tool_authorization_gate
 
 
@@ -88,3 +89,69 @@ def test_security_layer_disabled_preserves_existing_behavior(monkeypatch) -> Non
         merged_tool_call={"x": 1},
     )
     assert gate_result.outcome == DecisionType.ALLOW
+
+
+def test_observe_mode_allows_denied_decision(monkeypatch) -> None:
+    monkeypatch.setenv("SECURITY_LAYER_ENABLED", "true")
+    monkeypatch.setenv("SECURITY_LAYER_MODE", "observe")
+    result = run_tool_authorization_gate(
+        tool_name="admin_tool",
+        tool_args={},
+        user_id="u1",
+        session_id="s1",
+        tenant_id="t1",
+        merged_tool_call=None,
+    )
+    assert result.outcome == DecisionType.ALLOW
+
+
+def test_enforce_mode_denies_high_risk_tool(monkeypatch) -> None:
+    monkeypatch.setenv("SECURITY_LAYER_ENABLED", "true")
+    monkeypatch.setenv("SECURITY_LAYER_MODE", "enforce")
+    result = run_tool_authorization_gate(
+        tool_name="admin_tool",
+        tool_args={},
+        user_id="u1",
+        session_id="s1",
+        tenant_id="t1",
+        merged_tool_call=None,
+    )
+    assert result.outcome == DecisionType.DENY
+
+
+def test_exception_in_observe_mode_allows(monkeypatch) -> None:
+    monkeypatch.setenv("SECURITY_LAYER_ENABLED", "true")
+    monkeypatch.setenv("SECURITY_LAYER_MODE", "observe")
+    def _raise(*args: object, **kwargs: object) -> object:
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(IntegrationToolAuthorizer, "authorize", _raise)
+    result = run_tool_authorization_gate(
+        tool_name="read_file",
+        tool_args={},
+        user_id="u1",
+        session_id="s1",
+        tenant_id="t1",
+        merged_tool_call=None,
+    )
+    assert result.outcome == DecisionType.ALLOW
+    assert any(event.event_type == "security.evaluation.error" for event in result.audit_events)
+
+
+def test_exception_in_enforce_mode_denies_when_fail_closed(monkeypatch) -> None:
+    monkeypatch.setenv("SECURITY_LAYER_ENABLED", "true")
+    monkeypatch.setenv("SECURITY_LAYER_MODE", "enforce")
+    monkeypatch.setenv("SECURITY_LAYER_FAIL_CLOSED_IN_ENFORCE", "true")
+    def _raise(*args: object, **kwargs: object) -> object:
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(IntegrationToolAuthorizer, "authorize", _raise)
+    result = run_tool_authorization_gate(
+        tool_name="read_file",
+        tool_args={},
+        user_id="u1",
+        session_id="s1",
+        tenant_id="t1",
+        merged_tool_call=None,
+    )
+    assert result.outcome == DecisionType.DENY

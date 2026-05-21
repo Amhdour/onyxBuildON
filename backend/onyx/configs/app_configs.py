@@ -1395,3 +1395,35 @@ STRIPE_PUBLISHABLE_KEY_URL = (
 )
 # Override for local testing with Stripe test keys (pk_test_*)
 STRIPE_PUBLISHABLE_KEY_OVERRIDE = os.environ.get("STRIPE_PUBLISHABLE_KEY")
+
+
+#####
+# Security Layer Configs
+#####
+SECURITY_LAYER_ENABLED = os.environ.get("SECURITY_LAYER_ENABLED", "true").lower() == "true"
+SECURITY_LAYER_MODE = os.environ.get("SECURITY_LAYER_MODE", "observe").lower()
+SECURITY_LAYER_REQUIRE_CONTEXT = (
+    os.environ.get("SECURITY_LAYER_REQUIRE_CONTEXT", "false").lower() == "true"
+)
+SECURITY_LAYER_AUDIT_ENABLED = (
+    os.environ.get("SECURITY_LAYER_AUDIT_ENABLED", "true").lower() == "true"
+)
+SECURITY_LAYER_FINDINGS_ENABLED = (
+    os.environ.get("SECURITY_LAYER_FINDINGS_ENABLED", "true").lower() == "true"
+)
+SECURITY_LAYER_DECISION_PERSISTENCE_ENABLED = (
+    os.environ.get("SECURITY_LAYER_DECISION_PERSISTENCE_ENABLED", "true").lower() == "true"
+)
+SECURITY_LAYER_FAIL_CLOSED_IN_ENFORCE = (
+    os.environ.get("SECURITY_LAYER_FAIL_CLOSED_IN_ENFORCE", "true").lower() == "true"
+)
+SECURITY_LAYER_FAIL_OPEN_IN_OBSERVE = (
+    os.environ.get("SECURITY_LAYER_FAIL_OPEN_IN_OBSERVE", "true").lower() == "true"
+)
+SECURITY_LAYER_POLICY_PATH = os.environ.get(
+    "SECURITY_LAYER_POLICY_PATH", "backend/onyx/security_layer/policies"
+)
+SECURITY_LAYER_DEFAULT_TENANT_ID = os.environ.get("SECURITY_LAYER_DEFAULT_TENANT_ID", "default")
+SECURITY_LAYER_ADMIN_UI_ENABLED = (
+    os.environ.get("SECURITY_LAYER_ADMIN_UI_ENABLED", "true").lower() == "true"
+)
