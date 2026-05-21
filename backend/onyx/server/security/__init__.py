@@ -12,7 +12,7 @@ from onyx.server.security.retrieval import router as retrieval_router
 from onyx.server.security.sandbox import router as sandbox_router
 from onyx.server.security.tools import router as tools_router
 
-router = APIRouter(prefix="/security")
+router = APIRouter(prefix="/admin/security")
 router.include_router(overview_router)
 router.include_router(approvals_router)
 router.include_router(findings_router)
