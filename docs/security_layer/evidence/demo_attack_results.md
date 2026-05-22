@@ -19,23 +19,24 @@ Exit code: `1`
   - artifact scanner secret-detection fixture
   - sandbox unsafe-config fixture
 - Script writes machine-readable JSON report.
-- If dependencies are missing, script prints exact blocker and marks scenarios blocked.
+- Script runs a dependency preflight before scenario execution.
+- If dependencies are missing, script prints exact blocker, marks scenarios blocked, and exits non-zero without running scenario-by-scenario pytest.
 
 ## Observed Result
 ```text
-[tool_authorization_deny] status=blocked exit_code=4
-[approval_replay_fixture] status=blocked exit_code=4
-[mcp_missing_scope_or_context] status=blocked exit_code=4
-[retrieval_enforce_observe] status=blocked exit_code=4
-[artifact_scanner_secret_detection] status=blocked exit_code=4
-[sandbox_unsafe_config] status=blocked exit_code=4
-BLOCKER: No module named 'fastapi_users'
+BLOCKER: missing_dependency (fastapi_users)
+[tool_authorization_deny] status=blocked exit_code=1
+[approval_replay_fixture] status=blocked exit_code=1
+[mcp_missing_scope_or_context] status=blocked exit_code=1
+[retrieval_enforce_observe] status=blocked exit_code=1
+[artifact_scanner_secret_detection] status=blocked exit_code=1
+[sandbox_unsafe_config] status=blocked exit_code=1
 JSON report written to docs/security_layer/evidence/demo_attack_report.json
 ```
 
 ## Verification Classification
 - Implemented: Yes (safe executable fixture runner + JSON report output)
-- Verified: Command path verified; test behavior not verified because dependency import failed before collection.
+- Verified: Command path verified. Scenario behavior not verified because dependency import failed before collection.
 - Not yet verified: Scenario behavior assertions after dependency installation
 - Documented limitation: Missing `fastapi_users`
 - Production blocker: Yes, until blocked scenarios are re-run in a provisioned environment
