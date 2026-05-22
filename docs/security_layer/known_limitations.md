@@ -2,11 +2,11 @@
 
 ## Artifact scanner enforcement
 
-Artifact scanning modules and tests are present, but enforcement is currently limited to specific integrated paths. There is no repository-wide mandatory enforcement hook for every artifact export/download/generation path.
+Artifact scanning modules and tests are present. Global enforcement across all artifact export/download/generation paths is not currently verified.
 
 ## Sandbox guard enforcement
 
-Sandbox guard components are present, but enforcement is currently limited to specific integrated launch paths. There is no global runtime pre-execution enforcement across all code-execution launch paths.
+Sandbox guard modules and tests are present. Global pre-execution enforcement across all code-execution paths is not currently verified.
 
 ## Local security-layer test prerequisites
 
@@ -20,7 +20,6 @@ If your shell is not already in the project environment, activate `.venv` first:
 - `source .venv/bin/activate`
 
 In restricted environments where package installation is blocked, test execution can fail before collection due to missing Python packages (for example `fastapi-users`). This is an environment limitation, not evidence that security-layer checks are absent.
-
 
 ## Retrieval ACL verification scope
 
