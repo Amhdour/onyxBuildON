@@ -40,40 +40,48 @@ done
 
 if [[ ${#missing_dependencies[@]} -gt 0 ]]; then
   missing_csv="$(IFS=, ; echo "${missing_dependencies[*]}")"
+  scenarios_csv="$(printf '%s\n' "${SCENARIOS[@]}")"
   echo "BLOCKER: missing_dependency (${missing_csv})"
-
-  for scenario in "${SCENARIOS[@]}"; do
-    name="${scenario%%|*}"
-    test_target="${scenario##*|}"
-    echo "[$name] status=blocked exit_code=1"
-    python - <<PY >> "$TMP_RESULTS"
+  MISSING_CSV="$missing_csv" SCENARIOS_CSV="$scenarios_csv" TIMESTAMP="$TIMESTAMP" REPORT_PATH="$REPORT_PATH" python - <<'PY'
 import json
-print(json.dumps({
-  "scenario": "$name",
-  "test_target": "$test_target",
-  "status": "blocked",
-  "exit_code": 1,
-  "verified": False,
-  "blocker": "missing_dependency",
-  "missing_dependencies": "$missing_csv".split(","),
-  "output": "Scenario behavior not verified because dependency import failed before collection.",
-}))
-PY
-  done
-
-  python - <<PY
-import json
+import os
 from pathlib import Path
-lines = Path("$TMP_RESULTS").read_text(encoding="utf-8").splitlines()
+
+timestamp = os.environ["TIMESTAMP"]
+report_path = Path(os.environ["REPORT_PATH"])
+missing_dependencies = os.environ["MISSING_CSV"].split(",")
+scenarios = []
+for scenario in os.environ["SCENARIOS_CSV"].splitlines():
+  if not scenario.strip():
+    continue
+  name, test_target = scenario.split("|", 1)
+  scenarios.append({"scenario": name, "test_target": test_target})
+
+for scenario in scenarios:
+  print(f"[{scenario['scenario']}] status=blocked exit_code=1")
+
 report = {
-  "timestamp_utc": "$TIMESTAMP",
+  "timestamp_utc": timestamp,
   "command": "bash scripts/security_layer/run_demo_attacks.sh",
-  "results": [json.loads(line) for line in lines if line.strip()],
+  "results": [
+    {
+      "scenario": scenario["scenario"],
+      "test_target": scenario["test_target"],
+      "status": "blocked",
+      "exit_code": 1,
+      "verified": False,
+      "blocker": "missing_dependency",
+      "missing_dependencies": missing_dependencies,
+      "output": "Scenario behavior not verified because dependency import failed before collection.",
+    }
+    for scenario in scenarios
+  ],
 }
-Path("$REPORT_PATH").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
 PY
 
   rm -f "$TMP_RESULTS"
+  echo "Missing dependencies: ${missing_csv}"
   echo "JSON report written to $REPORT_PATH"
   exit 1
 fi
