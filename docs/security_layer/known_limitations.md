@@ -2,11 +2,11 @@
 
 ## Artifact scanner enforcement
 
-Artifact scanning modules and tests are present, but a repository-wide mandatory enforcement hook for every artifact export/download/generation path is not currently wired. Artifact scanning should be treated as module-ready, not globally enforced runtime policy.
+Artifact scanning modules and tests are present, but enforcement is currently limited to specific integrated paths. There is no repository-wide mandatory enforcement hook for every artifact export/download/generation path.
 
 ## Sandbox guard enforcement
 
-Sandbox guard components are present, but global runtime pre-execution enforcement across all code-execution launch paths is not fully integrated. Sandbox guard should be treated as readiness functionality, not global runtime enforcement.
+Sandbox guard components are present, but enforcement is currently limited to specific integrated launch paths. There is no global runtime pre-execution enforcement across all code-execution launch paths.
 
 ## Local security-layer test prerequisites
 
@@ -24,4 +24,4 @@ In restricted environments where package installation is blocked, test execution
 
 ## Retrieval ACL verification scope
 
-Current retrieval ACL verification checks embedded chunk metadata (e.g. `onyx_acl`) as a best-effort signal and does not query live Onyx DB permission tables for source-of-truth verification yet.
+Current retrieval ACL verification uses embedded chunk metadata (e.g. `onyx_acl`) as a best-effort signal. It does not perform live DB-backed permission-table verification as source of truth.
