@@ -38,6 +38,8 @@ export default function SecurityAdminPage() {
       <input className="border border-border-02 p-2 rounded-md" placeholder="decision" onChange={(e) => setFilters({ ...filters, decision: e.target.value })} />
     </div>
 
+    <OverviewCards overview={overview} findings={findings || []} />
+
     <Section title="Pending Approvals" rows={(approvals || []).filter((a: any) => a.status === "pending")} cols={["created_at", "status", "action", "tool_name", "requested_by_user_id", "tenant_id", "expires_at"]}
       rowActions={(row: any) => <div className="flex gap-2"><button className="border border-border-02 rounded-md p-1" onClick={() => setApproval(row.id, "approve")}>Approve</button><button className="border border-border-02 rounded-md p-1" onClick={() => setApproval(row.id, "deny")}>Deny</button></div>} />
 
@@ -45,6 +47,34 @@ export default function SecurityAdminPage() {
     <Section title="Findings" rows={findings || []} cols={["created_at", "severity", "title", "status", "actor_user_id", "tenant_id", "correlation_id"]} />
     <details className="border border-border-02 rounded-md p-3"><summary><Text font="main-ui-action" color="text-02">Raw JSON (expand)</Text></summary><pre className="bg-background-neutral-02 p-2 rounded-md overflow-x-auto text-xs">{JSON.stringify({ overview, decisions, findings, approvals, retrieval, mcp }, null, 2)}</pre></details>
   </div>;
+}
+
+
+interface OverviewCardsProps {
+  overview: any;
+  findings: any[];
+}
+
+function OverviewCards({ overview, findings }: OverviewCardsProps) {
+  const cards = [
+    { label: "security_layer_enabled", value: String(overview?.security_layer_enabled ?? "unknown") },
+    { label: "configured_policy_mode", value: String(overview?.configured_policy_mode ?? "unknown") },
+    { label: "effective_policy_mode", value: String(overview?.effective_policy_mode ?? "unknown") },
+    { label: "open_findings_count", value: String(overview?.open_findings_count ?? findings.filter((f: any) => f?.status === "open").length) },
+    { label: "critical_findings_count", value: String(overview?.critical_findings_count ?? findings.filter((f: any) => String(f?.severity || "").toLowerCase() === "critical").length) },
+    { label: "high_findings_count", value: String(overview?.high_findings_count ?? findings.filter((f: any) => String(f?.severity || "").toLowerCase() === "high").length) },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      {cards.map((card) => (
+        <div key={card.label} className="border border-border-02 rounded-md p-3 space-y-1 bg-background-neutral-01">
+          <Text font="secondary-body" color="text-03">{card.label}</Text>
+          <Text font="main-ui-action" color="text-01">{card.value}</Text>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 interface SectionProps { title: string; rows: any[]; cols: string[]; rowActions?: (row: any) => JSX.Element }
