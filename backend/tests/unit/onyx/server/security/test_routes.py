@@ -14,3 +14,4 @@ def test_security_routes_registered() -> None:
     assert "/admin/security/launch-gates" in paths
     assert "/admin/security/launch-gates/run" in paths
     assert "/admin/security/reports" in paths
+    assert "/admin/security/approvals" in paths
