@@ -22,9 +22,14 @@ def get_security_overview(_: User = Depends(require_permission(Permission.FULL_A
     denied_tools = persistence.list_policy_decisions({"tenant_id": tenant_id, "decision": "deny", "surface": "tool_execution"}, 10, 0)
     denied_retrieval = persistence.list_retrieval_events({"tenant_id": tenant_id, "decision": "deny"}, 10, 0)
     denied_mcp = persistence.list_mcp_events({"tenant_id": tenant_id, "decision": "deny"}, 10, 0)
+    configured_policy_mode = PolicyMode(get_security_layer_mode()).value
+    effective_policy_mode = configured_policy_mode if SECURITY_LAYER_ENABLED else "disabled"
+
     return {
         "security_layer_enabled": SECURITY_LAYER_ENABLED,
-        "policy_mode": PolicyMode(get_security_layer_mode()).value if SECURITY_LAYER_ENABLED else PolicyMode.OBSERVE.value,
+        "configured_policy_mode": configured_policy_mode,
+        "effective_policy_mode": effective_policy_mode,
+        "policy_mode": effective_policy_mode,
         "open_findings_count": sum(1 for finding in findings if finding.status == "open"),
         "critical_findings_count": sum(1 for finding in findings if finding.severity == "critical"),
         "high_findings_count": sum(1 for finding in findings if finding.severity == "high"),
