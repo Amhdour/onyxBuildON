@@ -1,0 +1,332 @@
+### backend deps hints
+pyproject.toml:13:    "fastapi==0.133.1",
+pyproject.toml:15:    "litellm[google]==1.83.14",
+pyproject.toml:19:    "prometheus_fastapi_instrumentator==7.1.0",
+pyproject.toml:34:    "alembic==1.18.4",
+pyproject.toml:41:    "celery==5.5.1",
+pyproject.toml:49:    "fastapi-users==15.0.4",
+pyproject.toml:50:    "fastapi-users-db-sqlalchemy==7.0.0",
+pyproject.toml:51:    "fastapi-limiter==0.1.6",
+pyproject.toml:70:    "langchain-core==1.3.3",
+pyproject.toml:107:    "redis==5.0.8",
+pyproject.toml:144:    "celery-types==0.19.0",
+pyproject.toml:155:    "pytest-alembic==0.12.1",
+pyproject.toml:192:    "sentry-sdk[fastapi,celery,starlette]==2.14.0",
+pyproject.toml:198:# litellm >=1.83.x switched from loose ranges to exact `==` pins on its
+pyproject.toml:199:# transitive dependencies (see https://github.com/BerriAI/litellm/issues/25280),
+pyproject.toml:202:# the loose ranges litellm declared prior to 1.83.1 so that uv's resolver is
+pyproject.toml:282:# alembic has a folder named `alembic` in backend/ which confuses import sorters.
+pyproject.toml:284:"backend/alembic/**" = ["I", "S608"]
+pyproject.toml:285:"backend/alembic_tenants/**" = ["I", "S608"]
+backend/requirements/ee.txt:113:    #   litellm
+backend/requirements/ee.txt:130:    # via fastapi
+backend/requirements/ee.txt:363:    #   litellm
+backend/requirements/ee.txt:449:fastapi==0.133.1 \
+backend/requirements/ee.txt:535:    # via litellm
+backend/requirements/ee.txt:670:    # via litellm
+backend/requirements/ee.txt:843:    #   litellm
+backend/requirements/ee.txt:873:    #   litellm
+backend/requirements/ee.txt:877:    # via litellm
+backend/requirements/ee.txt:969:    #   litellm
+backend/requirements/ee.txt:979:litellm==1.83.14 \
+backend/requirements/ee.txt:1267:    #   litellm
+backend/requirements/ee.txt:1288:    #   prometheus-fastapi-instrumentator
+backend/requirements/ee.txt:1289:prometheus-fastapi-instrumentator==7.1.0 \
+backend/requirements/ee.txt:1437:    #   fastapi
+backend/requirements/ee.txt:1440:    #   litellm
+backend/requirements/ee.txt:1527:    #   litellm
+backend/requirements/ee.txt:1860:    #   fastapi
+backend/requirements/ee.txt:1862:    #   prometheus-fastapi-instrumentator
+backend/requirements/ee.txt:1885:    # via litellm
+backend/requirements/ee.txt:1905:    #   litellm
+backend/requirements/ee.txt:1927:    #   fastapi
+backend/requirements/ee.txt:1944:    #   fastapi
+backend/requirements/dev.txt:113:    #   litellm
+backend/requirements/dev.txt:127:alembic==1.18.4 \
+backend/requirements/dev.txt:130:    # via pytest-alembic
+backend/requirements/dev.txt:134:    # via fastapi
+backend/requirements/dev.txt:221:celery-types==0.19.0 \
+backend/requirements/dev.txt:380:    #   litellm
+backend/requirements/dev.txt:587:fastapi==0.133.1 \
+backend/requirements/dev.txt:675:    # via litellm
+backend/requirements/dev.txt:856:    # via litellm
+backend/requirements/dev.txt:965:    # via sqlalchemy
+backend/requirements/dev.txt:1077:    #   litellm
+backend/requirements/dev.txt:1112:    #   litellm
+backend/requirements/dev.txt:1113:    #   sqlalchemy
+backend/requirements/dev.txt:1137:    # via litellm
+backend/requirements/dev.txt:1229:    #   litellm
+backend/requirements/dev.txt:1334:litellm==1.83.14 \
+backend/requirements/dev.txt:1341:    # via alembic
+backend/requirements/dev.txt:1699:    #   litellm
+backend/requirements/dev.txt:1837:    #   prometheus-fastapi-instrumentator
+backend/requirements/dev.txt:1838:prometheus-fastapi-instrumentator==7.1.0 \
+backend/requirements/dev.txt:2019:    #   fastapi
+backend/requirements/dev.txt:2022:    #   litellm
+backend/requirements/dev.txt:2108:    #   pytest-alembic
+backend/requirements/dev.txt:2113:pytest-alembic==0.12.1 \
+backend/requirements/dev.txt:2142:    #   litellm
+backend/requirements/dev.txt:2546:sqlalchemy==2.0.15 \
+backend/requirements/dev.txt:2558:    #   alembic
+backend/requirements/dev.txt:2559:    #   pytest-alembic
+backend/requirements/dev.txt:2572:    #   fastapi
+backend/requirements/dev.txt:2574:    #   prometheus-fastapi-instrumentator
+backend/requirements/dev.txt:2597:    # via litellm
+backend/requirements/dev.txt:2617:    #   litellm
+backend/requirements/dev.txt:2723:    #   alembic
+backend/requirements/dev.txt:2725:    #   celery-types
+backend/requirements/dev.txt:2727:    #   fastapi
+backend/requirements/dev.txt:2739:    #   sqlalchemy
+backend/requirements/dev.txt:2747:    #   fastapi
+backend/requirements/model_server.txt:116:    #   litellm
+backend/requirements/model_server.txt:137:    # via fastapi
+backend/requirements/model_server.txt:163:    # via celery
+backend/requirements/model_server.txt:220:celery==5.5.1 \
+backend/requirements/model_server.txt:374:    #   celery
+backend/requirements/model_server.txt:378:    #   litellm
+backend/requirements/model_server.txt:384:    # via celery
+backend/requirements/model_server.txt:388:    # via celery
+backend/requirements/model_server.txt:392:    # via celery
+backend/requirements/model_server.txt:479:fastapi==0.133.1 \
+backend/requirements/model_server.txt:567:    # via litellm
+backend/requirements/model_server.txt:706:    # via litellm
+backend/requirements/model_server.txt:879:    #   litellm
+backend/requirements/model_server.txt:913:    #   litellm
+backend/requirements/model_server.txt:919:    #   litellm
+backend/requirements/model_server.txt:1016:    #   litellm
+backend/requirements/model_server.txt:1025:    # via celery
+backend/requirements/model_server.txt:1030:litellm==1.83.14 \
+backend/requirements/model_server.txt:1382:    #   litellm
+backend/requirements/model_server.txt:1403:    #   prometheus-fastapi-instrumentator
+backend/requirements/model_server.txt:1404:prometheus-fastapi-instrumentator==7.1.0 \
+backend/requirements/model_server.txt:1577:    #   fastapi
+backend/requirements/model_server.txt:1580:    #   litellm
+backend/requirements/model_server.txt:1660:    #   celery
+backend/requirements/model_server.txt:1667:    #   litellm
+backend/requirements/model_server.txt:2121:    #   fastapi
+backend/requirements/model_server.txt:2123:    #   prometheus-fastapi-instrumentator
+backend/requirements/model_server.txt:2155:    # via litellm
+backend/requirements/model_server.txt:2175:    #   litellm
+backend/requirements/model_server.txt:2242:    #   fastapi
+backend/requirements/model_server.txt:2261:    #   fastapi
+backend/requirements/model_server.txt:2289:    #   celery
+backend/requirements/default.txt:119:    #   litellm
+backend/requirements/default.txt:133:alembic==1.18.4 \
+backend/requirements/default.txt:143:    # via fastapi
+backend/requirements/default.txt:194:    # via redis
+backend/requirements/default.txt:322:    # via celery
+backend/requirements/default.txt:413:celery==5.5.1 \
+backend/requirements/default.txt:595:    #   celery
+backend/requirements/default.txt:601:    #   litellm
+backend/requirements/default.txt:611:    # via celery
+### frontend package
+{
+  "name": "web",
+  "version": "1.0.0-dev",
+  "private": true,
+  "workspaces": [
+    "lib/opal"
+  ],
+  "scripts": {
+    "dev": "next dev",
+    "dev:profile": "NEXT_PUBLIC_ENABLE_STATS=true next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "types:check": "tsgo --noEmit --project tsconfig.types.json",
+    "format": "oxfmt src",
+    "format:check": "oxfmt --check src",
+    "playwright": "playwright test",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:verbose": "jest --verbose",
+    "test:ci": "jest --ci --maxWorkers=2 --silent --bail",
+    "test:changed": "jest --onlyChanged",
+    "test:diff": "jest --changedSince=main",
+    "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
+    "storybook": "storybook dev -p 6006",
+    "storybook:build": "storybook build -o storybook-static"
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.1.0",
+    "@dnd-kit/modifiers": "^7.0.0",
+    "@dnd-kit/sortable": "^8.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@emotion/stylis": "^0.8.5",
+    "@headlessui/react": "^2.2.0",
+    "@headlessui/tailwindcss": "^0.2.1",
+    "@onyx-ai/opal": "./lib/opal",
+    "@phosphor-icons/react": "^2.0.8",
+    "@radix-ui/react-accordion": "^1.2.2",
+    "@radix-ui/react-avatar": "^1.1.10",
+    "@radix-ui/react-collapsible": "^1.1.2",
+    "@radix-ui/react-dialog": "^1.1.6",
+    "@radix-ui/react-dropdown-menu": "^2.1.6",
+    "@radix-ui/react-hover-card": "^1.1.15",
+    "@radix-ui/react-label": "^2.1.1",
+    "@radix-ui/react-menubar": "^1.1.16",
+    "@radix-ui/react-popover": "^1.1.6",
+    "@radix-ui/react-radio-group": "^1.2.2",
+    "@radix-ui/react-scroll-area": "^1.2.2",
+    "@radix-ui/react-select": "^2.1.6",
+    "@radix-ui/react-separator": "^1.1.0",
+    "@radix-ui/react-slider": "^1.2.2",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@radix-ui/react-tabs": "^1.1.1",
+    "@radix-ui/react-tooltip": "^1.2.8",
+    "@sentry/nextjs": "^10.27.0",
+    "@sentry/tracing": "^7.120.3",
+    "@stripe/stripe-js": "^4.6.0",
+    "@tanstack/react-table": "^8.21.3",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "cmdk": "^1.0.0",
+    "cookies-next": "^5.1.0",
+    "copy-to-clipboard": "^3.3.3",
+    "date-fns": "^3.6.0",
+    "docx-preview": "^0.3.7",
+    "favicon-fetch": "^1.0.0",
+    "formik": "^2.2.9",
+    "highlight.js": "^11.11.1",
+    "js-cookie": "^3.0.5",
+    "katex": "^0.16.38",
+    "linguist-languages": "^9.3.1",
+    "lodash": "^4.18.1",
+    "lowlight": "^3.3.0",
+    "lucide-react": "^0.454.0",
+    "mdast-util-find-and-replace": "^3.0.1",
+    "mime": "^4.1.0",
+    "motion": "^12.29.0",
+    "next": "16.2.6",
+    "next-themes": "^0.4.4",
+    "postcss": "^8.5.10",
+    "posthog-js": "^1.176.0",
+    "pptxgenjs": "^4.0.1",
+    "react": "19.2.4",
+    "react-datepicker": "^7.6.0",
+    "react-day-picker": "^9.13.0",
+    "react-dom": "19.2.4",
+    "react-dropzone": "^14.2.3",
+    "react-icons": "^4.8.0",
+    "react-loader-spinner": "^8.0.0",
+    "react-markdown": "^9.0.1",
+    "react-select": "^5.8.0",
+    "recharts": "^2.13.1",
+    "rehype-highlight": "^7.0.2",
+    "rehype-katex": "^7.0.1",
+    "rehype-sanitize": "^6.0.0",
+    "rehype-stringify": "^10.0.1",
+    "remark-gfm": "^4.0.0",
+    "remark-math": "^6.0.0",
+    "semver": "^7.5.4",
+    "sharp": "^0.33.5",
+    "stripe": "^17.0.0",
+    "swr": "^2.1.5",
+    "tailwind-merge": "^3.6.0",
+    "tw-animate-css": "^1.4.0",
+    "uuid": "^14.0.0",
+    "vaul": "^1.1.1",
+    "yup": "^1.4.0",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.39.0",
+    "@storybook/addon-essentials": "^8.6.18",
+    "@storybook/addon-themes": "^8.6.18",
+    "@storybook/blocks": "^8.6.18",
+    "@storybook/react": "^8.6.18",
+    "@storybook/react-vite": "^8.6.18",
+    "@tailwindcss/postcss": "^4.3.0",
+    "@tailwindcss/typography": "^0.5.19",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/chrome": "^0.0.287",
+    "@types/hast": "^3.0.4",
+    "@types/jest": "^29.5.14",
+    "@types/js-cookie": "^3.0.6",
+    "@types/lodash": "^4.17.20",
+    "@types/node": "24.12.2",
+    "@types/react": "19.2.10",
+    "@types/react-dom": "19.2.3",
+    "@types/stats.js": "^0.17.4",
+    "@types/uuid": "^9.0.8",
+    "@typescript/native-preview": "^7.0.0-dev.20260424.2",
+    "babel-plugin-react-compiler": "^1.0.0",
+    "baseline-browser-mapping": "^2.9.19",
+    "esbuild-plugin-preserve-directives": "^0.0.11",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^30.2.0",
+    "oxfmt": "0.49.0",
+    "oxlint": "^1.64.0",
+    "stats.js": "^0.17.0",
+    "storybook": "^8.6.18",
+    "tailwindcss": "^4.3.0",
+    "ts-jest": "^29.2.5",
+    "ts-unused-exports": "^11.0.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "whatwg-fetch": "^3.6.20"
+  },
+  "overrides": {
+    "react-is": "^19.0.0-rc-69d4b800-20241021",
+    "@types/react": "19.2.10",
+    "@types/react-dom": "19.2.3"
+  }
+}
+### root package if any
+no root package.json
+### docker compose services hints
+14:#    - Comment out ports for: api_server, relational_db, cache, minio
+58:      opensearch:
+62:      inference_model_server:
+64:      minio:
+78:      - OPENSEARCH_HOST=${OPENSEARCH_HOST:-opensearch}
+81:      - MODEL_SERVER_HOST=${MODEL_SERVER_HOST:-inference_model_server}
+83:      - S3_ENDPOINT_URL=${S3_ENDPOINT_URL:-http://minio:9000}
+84:      - S3_AWS_ACCESS_KEY_ID=${S3_AWS_ACCESS_KEY_ID:-minioadmin}
+85:      - S3_AWS_SECRET_ACCESS_KEY=${S3_AWS_SECRET_ACCESS_KEY:-minioadmin}
+93:    # PRODUCTION: Uncomment the line below to use if IAM_AUTH is true and you are using iam auth for postgres
+147:      opensearch:
+151:      inference_model_server:
+153:      indexing_model_server:
+159:      - OPENSEARCH_HOST=${OPENSEARCH_HOST:-opensearch}
+162:      - MODEL_SERVER_HOST=${MODEL_SERVER_HOST:-inference_model_server}
+163:      - INDEXING_MODEL_SERVER_HOST=${INDEXING_MODEL_SERVER_HOST:-indexing_model_server}
+164:      - S3_ENDPOINT_URL=${S3_ENDPOINT_URL:-http://minio:9000}
+165:      - S3_AWS_ACCESS_KEY_ID=${S3_AWS_ACCESS_KEY_ID:-minioadmin}
+166:      - S3_AWS_SECRET_ACCESS_KEY=${S3_AWS_SECRET_ACCESS_KEY:-minioadmin}
+178:    # PRODUCTION: Uncomment the line below to use if IAM_AUTH is true and you are using iam auth for postgres
+277:  inference_model_server:
+281:      dockerfile: Dockerfile.model_server
+296:        exec uvicorn model_server.main:app --host 0.0.0.0 --port 9000;
+306:      - inference_model_server_logs:/var/log/onyx
+327:  indexing_model_server:
+331:      dockerfile: Dockerfile.model_server
+346:        exec uvicorn model_server.main:app --host 0.0.0.0 --port 9000;
+358:      - indexing_model_server_logs:/var/log/onyx
+380:    image: postgres:15.2-alpine
+389:      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+397:      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+402:      - db_volume:/var/lib/postgresql/data
+404:  opensearch:
+405:    image: opensearchproject/opensearch:3.6.0
+416:      # This and the JVM config below come from the example in https://docs.opensearch.org/latest/install-and-configure/install-opensearch/docker/
+421:      # See https://opster.com/guides/opensearch/opensearch-basics/opensearch-heap-size-usage-and-jvm-garbage-collection/
+426:      - opensearch-data:/usr/share/opensearch/data
+427:    # These come from the example in https://docs.opensearch.org/latest/install-and-configure/install-opensearch/docker/
+435:        soft: 65536 # Maximum number of open files for the opensearch user - set to at least 65536.
+504:    image: redis:7.4-alpine
+513:    command: redis-server --save "" --appendonly no
+521:  minio:
+522:    image: minio/minio:RELEASE.2025-07-23T15-54-02Z-cpuv1
+535:      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+536:      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+540:      - minio_data:/data
+582:  minio_data:
+590:  inference_model_server_logs:
+591:  indexing_model_server_logs:
+595:  opensearch-data:

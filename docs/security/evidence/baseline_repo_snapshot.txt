@@ -1,0 +1,86 @@
+## date
+Sun May 24 11:09:59 UTC 2026
+## branch
+work
+## commit
+5791e31c91e9b2fc90721fa521f0167f51a34104
+## status
+?? docs/security/
+## top-level
+extensions
+extensions/chrome
+cli
+cli/cmd
+cli/internal
+docs
+docs/security
+docs/dev
+docs/security_layer
+docs/craft
+scripts
+scripts/security_layer
+.devcontainer
+deployment
+deployment/terraform
+deployment/aws_ecs_fargate
+deployment/helm
+deployment/docker_compose
+deployment/data
+demo
+demo/security_attacks
+.git
+.git/branches
+.git/info
+.git/objects
+.git/hooks
+.git/refs
+.git/logs
+desktop
+desktop/src-tauri
+desktop/scripts
+desktop/src
+desktop/node_modules
+widget
+widget/public
+widget/src
+widget/node_modules
+.vscode
+.greptile
+tools
+tools/ods
+.venv
+.venv/lib
+.venv/bin
+profiling
+profiling/grafana
+.github
+.github/workflows
+.github/actions
+backend
+backend/slackbot_images
+backend/shared_configs
+backend/alembic
+backend/scripts
+backend/requirements
+backend/onyx
+backend/static
+backend/tests
+backend/keys
+backend/ee
+backend/alembic_tenants
+backend/model_server
+backend/assets
+web
+web/@types
+web/tailwind-themes
+web/public
+web/src
+web/tests
+web/.storybook
+web/lib
+web/node_modules
+web/types
+contributor_ip_assignment
+examples
+examples/assistants-api
+examples/widget
