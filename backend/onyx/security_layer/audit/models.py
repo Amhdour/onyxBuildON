@@ -4,10 +4,9 @@ from datetime import datetime, timezone
 from enum import Enum
 from uuid import uuid4
 
+from typing import Any
+
 from pydantic import BaseModel, Field
-
-
-JsonValue: TypeAlias = str | int | float | bool | None | list["JsonValue"] | dict[str, "JsonValue"]
 
 
 class AuditEvent(BaseModel):
@@ -21,5 +20,5 @@ class AuditEvent(BaseModel):
     resource_id: str
     action: str
     risk_level: str
-    details: dict[str, JsonValue] = Field(default_factory=dict)
+    details: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
