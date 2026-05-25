@@ -2,7 +2,7 @@
 
 Date: Mon May 25 10:20:35 UTC 2026
 Branch: security-layer-mvp
-Commit: 5ba92d877f05cfcd19e5385682a1a6738134f564
+Commit before install evidence: 5ba92d877f05cfcd19e5385682a1a6738134f564
 
 ## Command
 
@@ -10,7 +10,12 @@ cd web && bun install --frozen-lockfile
 
 ## Result
 
-Record result from terminal output here.
+PASS: web dependency installation completed successfully.
 
-## Git status
-?? docs/security/evidence/step3_web_dependency_install.md
+## Observations
+
+- Bun version: 1.3.14.
+- web/bun.lock was used with --frozen-lockfile.
+- 1096 packages installed.
+- Install completed in 87.24s.
+- No lockfile update was requested.
