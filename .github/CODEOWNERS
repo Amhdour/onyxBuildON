@@ -1,4 +1,18 @@
 * @onyx-dot-app/onyx-core-team
+
+# Repository workflow and security-layer owners
+/.github/CODEOWNERS @Amhdour
+/.github/pull_request_template.md @Amhdour
+/.github/workflows/ @Amhdour
+/CHANGELOG.md @Amhdour
+/docs/security/ @Amhdour
+/backend/security_layer/ @Amhdour
+/backend/onyx/security_layer/ @Amhdour
+/backend/onyx/server/features/build/sandbox/ @Amhdour
+/backend/onyx/server/features/mcp/ @Amhdour
+/backend/onyx/context/search/ @Amhdour
+/backend/onyx/db/ @Amhdour
+
 # Helm charts Owners
 /helm/ @justin-tahara
 
