@@ -12,10 +12,16 @@ from onyx.security_layer.decisions.models import SecurityDecision
 from onyx.security_layer.findings.models import FindingSeverity
 from onyx.security_layer.findings.models import FindingStatus
 from onyx.security_layer.findings.models import SecurityFinding
+from onyx.security_layer.persistence.db_availability import is_security_layer_db_available
 
 
 class FindingService:
+    _memory_findings: list[SecurityFinding] = []
+
     def create(self, finding: SecurityFinding) -> SecurityFinding:
+        if not is_security_layer_db_available():
+            self._memory_findings.append(finding)
+            return finding
         with get_session_with_current_tenant() as db_session:
             db_session.add(
                 DbSecurityFinding(
@@ -58,6 +64,12 @@ class FindingService:
         return self.create(finding)
 
     def update_finding_status(self, finding_id: str, status: FindingStatus) -> bool:
+        if not is_security_layer_db_available():
+            for finding in self._memory_findings:
+                if finding.finding_id == finding_id:
+                    finding.status = status
+                    return True
+            return False
         with get_session_with_current_tenant() as db_session:
             row = db_session.get(DbSecurityFinding, finding_id)
             if row is None:
@@ -68,6 +80,8 @@ class FindingService:
 
     def list_findings(self, filters: dict[str, Any] | None = None, limit: int = 100, offset: int = 0) -> list[DbSecurityFinding]:
         filters = filters or {}
+        if not is_security_layer_db_available():
+            return []
         with get_session_with_current_tenant() as db_session:
             stmt = select(DbSecurityFinding).order_by(DbSecurityFinding.created_at.desc()).limit(limit).offset(offset)
             if tenant_id := filters.get("tenant_id"):
@@ -80,6 +94,8 @@ class FindingService:
 
     def count_findings(self, filters: dict[str, Any] | None = None) -> int:
         filters = filters or {}
+        if not is_security_layer_db_available():
+            return len(self._memory_findings)
         with get_session_with_current_tenant() as db_session:
             stmt = select(func.count()).select_from(DbSecurityFinding)
             if tenant_id := filters.get("tenant_id"):
@@ -87,6 +103,8 @@ class FindingService:
             return int(db_session.execute(stmt).scalar_one())
 
     def list_all(self) -> list[SecurityFinding]:
+        if not is_security_layer_db_available():
+            return list(self._memory_findings)
         rows = self.list_findings()
         return [
             SecurityFinding(

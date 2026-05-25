@@ -9,12 +9,18 @@ from onyx.db.engine.sql_engine import get_session_with_current_tenant
 from onyx.db.security_layer import SecurityAuditEvent
 from onyx.security_layer.audit.models import AuditEvent
 from onyx.security_layer.audit.redaction import redact_details
+from onyx.security_layer.persistence.db_availability import is_security_layer_db_available
 from onyx.security_layer.redaction import redact_security_payload
 
 
 class AuditService:
+    _memory_events: list[AuditEvent] = []
+
     def create_audit_event(self, event: AuditEvent) -> AuditEvent:
         event.details = redact_security_payload(redact_details(event.details))
+        if not is_security_layer_db_available():
+            self._memory_events.append(event)
+            return event
         with get_session_with_current_tenant() as db_session:
             db_session.add(
                 SecurityAuditEvent(
@@ -42,6 +48,19 @@ class AuditService:
 
     def list_audit_events(self, filters: dict[str, Any] | None = None, limit: int = 100, offset: int = 0) -> list[dict[str, Any]]:
         filters = filters or {}
+        if not is_security_layer_db_available():
+            rows = self._memory_events[offset : offset + limit]
+            return [
+                {
+                    "id": r.event_id,
+                    "event_type": r.event_type,
+                    "severity": r.risk_level,
+                    "tenant_id": r.tenant_id,
+                    "actor_user_id": r.user_id,
+                    "created_at": r.created_at.isoformat(),
+                }
+                for r in rows
+            ]
         with get_session_with_current_tenant() as db_session:
             stmt = select(SecurityAuditEvent).order_by(SecurityAuditEvent.created_at.desc()).limit(limit).offset(offset)
             if tenant_id := filters.get("tenant_id"):
