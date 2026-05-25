@@ -14,6 +14,7 @@ from onyx.security_layer.mcp_authorizer.audit import MCPAuditLogger
 from onyx.security_layer.mcp_authorizer.scopes import MCPScope
 from onyx.security_layer.mcp_authorizer.scopes import required_scope_for_action
 from onyx.security_layer.mcp_authorizer.session import MCPSession
+from onyx.security_layer.mode import is_enforce_mode
 from onyx.security_layer.policy.context import PolicyContext
 from onyx.security_layer.policy.engine import PolicyEngine
 
@@ -44,8 +45,7 @@ class MCPAuthorizer:
         required_scope = required_scope_for_action(action)
         missing_context = session.user_id in {"missing:user", "", None} or session.tenant_id in {"missing:tenant", "", None}
         if app_configs.SECURITY_LAYER_REQUIRE_CONTEXT and missing_context:
-            mode = os.getenv("SECURITY_LAYER_MODE", "observe").lower()
-            context_decision = DecisionType.DENY if mode == "enforce" else DecisionType.ALLOW
+            context_decision = DecisionType.DENY if is_enforce_mode() else DecisionType.ALLOW
             decision = self._build_decision(
                 session,
                 action,
@@ -57,7 +57,7 @@ class MCPAuthorizer:
             decision.evidence["missing_context"] = True
         elif required_scope == MCPScope.ADMIN:
             decision = self._build_decision(session, action, DecisionType.DENY, RiskLevel.CRITICAL, "mcp:admin denied by policy", required_scope.value)
-        elif not session.has_scope(required_scope.value):
+        elif not session.has_scope(MCPScope.USE.value) or not session.has_scope(required_scope.value):
             decision = self._build_decision(session, action, DecisionType.DENY, RiskLevel.HIGH, "missing required scope", required_scope.value)
         elif required_scope in {MCPScope.FILE_WRITE, MCPScope.CODE_EXECUTE}:
             decision = self._build_decision(session, action, DecisionType.REQUIRE_APPROVAL, RiskLevel.HIGH, "high-risk action requires approval", required_scope.value)
