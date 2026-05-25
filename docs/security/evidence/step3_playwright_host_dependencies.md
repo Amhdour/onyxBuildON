@@ -1,8 +1,8 @@
-]633;E;echo "# Step 3 Playwright Host Dependencies";29cb2306-34f5-4ab2-8ad1-d8d7b2984f71]633;C# Step 3 Playwright Host Dependencies
+]633;E;echo "# Step 3 Playwright Host Dependencies";28ebc4f9-d25b-4c6d-a3c7-f190a7f16d8c]633;C# Step 3 Playwright Host Dependencies
 
-Date: Mon May 25 10:33:14 UTC 2026
+Date: Mon May 25 10:35:33 UTC 2026
 Branch: security-layer-mvp
-Commit: 76240ea4d2a4a00eb29c2c171a660d1be46f11d6
+Commit: be13e1e8cd2d95f67cedfe134ae5098dce80891f
 
 ## Command used
 
@@ -14,7 +14,10 @@ cd web && bunx playwright install --dry-run
 
 ## Result
 
-Record whether the dry-run still shows host dependency warnings.
+PASS: Playwright host dependencies are installed.
 
-## Git status
-?? docs/security/evidence/step3_playwright_host_dependencies.md
+## Evidence
+
+- Terminal accepted a new command after dependency installation.
+- Playwright dry-run listed Chromium, Chromium Headless Shell, Firefox, WebKit, and ffmpeg.
+- No missing host dependency warning appeared after installing dependencies.
