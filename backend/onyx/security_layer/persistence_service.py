@@ -248,6 +248,15 @@ class SecurityPersistenceService:
             return list(db_session.execute(stmt).scalars().all())
 
     def set_approval_status(self, approval_id: str, status: str, approved_by_user_id: str | None = None) -> SecurityApprovalRequest | None:
+        if not is_security_layer_db_available():
+            for row in self._memory_approvals:
+                if row.id == approval_id:
+                    row.status = status
+                    if approved_by_user_id:
+                        row.approved_by_user_id = approved_by_user_id
+                    row.updated_at = datetime.utcnow()
+                    return row  # type: ignore[return-value]
+            return None
         with get_session_with_current_tenant() as db_session:
             row = db_session.get(SecurityApprovalRequest, approval_id)
             if row is None:
