@@ -27,7 +27,7 @@ class SecurityFinding(BaseModel):
     category: str
     severity: FindingSeverity
     status: FindingStatus = FindingStatus.OPEN
-    tenant_id: str
+    tenant_id: str | None
     asset_type: str
     asset_id: str
     policy_id: str

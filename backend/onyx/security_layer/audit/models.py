@@ -12,9 +12,9 @@ from pydantic import BaseModel, Field
 class AuditEvent(BaseModel):
     event_id: str = Field(default_factory=lambda: str(uuid4()))
     event_type: str
-    tenant_id: str
-    user_id: str
-    session_id: str
+    tenant_id: str | None
+    user_id: str | None
+    session_id: str | None
     decision_id: str
     resource_type: str
     resource_id: str
