@@ -25,6 +25,7 @@ _OPENAI_RE = re.compile(r"\bsk-[a-zA-Z0-9\-_]{12,}\b")
 _AWS_RE = re.compile(r"\b(AKIA|ASIA)[A-Z0-9]{16}\b")
 _JWT_RE = re.compile(r"\beyJ[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+\b")
 _GENERIC_SECRET_RE = re.compile(r"(api[_-]?key\s*[:=]\s*\S+|password\s*[:=]\s*\S+)", re.IGNORECASE)
+_INLINE_TOKEN_RE = re.compile(r"\b(?:token|access_token|refresh_token)\s*=\s*[^\s,;]+", re.IGNORECASE)
 _DEMO_SECRET_RE = re.compile(r"\b(?:demo|fake|test)[_-]?(?:secret|token|key)\b", re.IGNORECASE)
 
 
@@ -38,7 +39,7 @@ def _redact_string(value: str) -> str:
         return _REDACTED
 
     redacted = value
-    for pattern in (_BEARER_RE, _OPENAI_RE, _AWS_RE, _JWT_RE, _GENERIC_SECRET_RE, _DEMO_SECRET_RE):
+    for pattern in (_BEARER_RE, _OPENAI_RE, _AWS_RE, _JWT_RE, _GENERIC_SECRET_RE, _INLINE_TOKEN_RE, _DEMO_SECRET_RE):
         redacted = pattern.sub(_REDACTED, redacted)
     return redacted
 

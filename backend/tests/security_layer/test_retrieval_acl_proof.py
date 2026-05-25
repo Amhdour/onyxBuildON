@@ -26,6 +26,9 @@ def _chunk(acl_state: str, *, tenant_id: str = "t1") -> InferenceChunk:
         doc_summary="",
         chunk_context="",
         updated_at=datetime.utcnow(),
+        source_links=[],
+        image_file_id=None,
+        section_continuation=False,
     )
 
 

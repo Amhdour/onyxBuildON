@@ -41,11 +41,11 @@ class PolicyEngine:
                 )
 
         default_policy = matching_surface[0] if matching_surface else None
-        default_decision = DecisionType.DENY if default_policy is None else DecisionType(default_policy.default_decision.value)
+        default_decision = DecisionType.ALLOW if default_policy is None else DecisionType(default_policy.default_decision.value)
         return SecurityDecision(
             decision=default_decision,
             risk_level=RiskLevel.MEDIUM if default_decision != DecisionType.ALLOW else RiskLevel.LOW,
-            reason="No matching allow rule found for protected action",
+            reason="No matching policy rule found",
             policy_id=default_policy.policy_id if default_policy else "default",
             matched_rules=["default:no_match"],
             evidence={"policy_version": default_policy.policy_version if default_policy else "v1", "surface": default_policy.surface if default_policy else "unknown"},
