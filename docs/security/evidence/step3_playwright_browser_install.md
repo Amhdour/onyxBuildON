@@ -1,8 +1,8 @@
-]633;E;echo "# Step 3 Playwright Browser Install";a1d6907d-6512-4385-9db4-e32e6b3e81fe]633;C# Step 3 Playwright Browser Install
+]633;E;echo "# Step 3 Playwright Browser Install";574766f2-5805-414b-a3dd-5472ee472d76]633;C# Step 3 Playwright Browser Install
 
-Date: Mon May 25 10:27:31 UTC 2026
+Date: Mon May 25 10:29:34 UTC 2026
 Branch: security-layer-mvp
-Commit: d9932c9b8ce13890a192eb82eeb63c7f47cb4e34
+Commit: 3379ffda08eb280db86f1e0193f08d07a061b0df
 
 ## Command
 
@@ -10,7 +10,22 @@ cd web && bunx playwright install
 
 ## Result
 
-Record result from terminal output here.
+PARTIAL PASS: Playwright browsers downloaded successfully, but host dependency validation reported missing Linux libraries.
 
-## Git status
-?? docs/security/evidence/step3_playwright_browser_install.md
+## Downloaded
+
+- Chromium 141.0.7390.37
+- Chromium Headless Shell 141.0.7390.37
+- Firefox 142.0.1
+- WebKit 26.0
+- FFMPEG build v1011
+
+## Warning
+
+Playwright reported missing host dependencies and recommended:
+
+sudo npx playwright install-deps
+
+## Required next action
+
+Install Playwright system dependencies before running Playwright tests.
