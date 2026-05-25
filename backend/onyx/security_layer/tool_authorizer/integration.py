@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from typing import Any
 
 from onyx.security_layer.audit.models import AuditEvent
@@ -80,7 +81,10 @@ def run_tool_authorization_gate(
         )
     )
 
-    require_context = app_configs.SECURITY_LAYER_REQUIRE_CONTEXT
+    require_context = os.getenv(
+        "SECURITY_LAYER_REQUIRE_CONTEXT",
+        str(app_configs.SECURITY_LAYER_REQUIRE_CONTEXT),
+    ).strip().lower() in {"1", "true", "yes", "on"}
     missing_hard = (user_id in {None, "missing:user"}) or (tenant_id in {None, "missing:tenant"})
 
     if missing_hard and require_context and is_enforce_mode():

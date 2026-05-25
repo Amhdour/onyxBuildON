@@ -7,10 +7,16 @@ from sqlalchemy import select
 from onyx.db.engine.sql_engine import get_session_with_current_tenant
 from onyx.db.security_layer import SecurityPolicyDecision
 from onyx.security_layer.decisions.models import SecurityDecision
+from onyx.security_layer.persistence.db_availability import is_security_layer_db_available
 
 
 class DecisionService:
+    _memory_decisions: list[SecurityDecision] = []
+
     def create_policy_decision(self, decision: SecurityDecision) -> SecurityDecision:
+        if not is_security_layer_db_available():
+            self._memory_decisions.append(decision)
+            return decision
         with get_session_with_current_tenant() as db_session:
             db_session.add(
                 SecurityPolicyDecision(
@@ -41,6 +47,8 @@ class DecisionService:
 
     def list_policy_decisions(self, filters: dict[str, Any] | None = None, limit: int = 100, offset: int = 0) -> list[SecurityPolicyDecision]:
         filters = filters or {}
+        if not is_security_layer_db_available():
+            return []
         with get_session_with_current_tenant() as db_session:
             stmt = select(SecurityPolicyDecision).order_by(SecurityPolicyDecision.created_at.desc()).limit(limit).offset(offset)
             if tenant_id := filters.get("tenant_id"):
@@ -48,4 +56,6 @@ class DecisionService:
             return list(db_session.execute(stmt).scalars().all())
 
     def list_all(self) -> list[SecurityDecision]:
+        if not is_security_layer_db_available():
+            return list(self._memory_decisions)
         return []

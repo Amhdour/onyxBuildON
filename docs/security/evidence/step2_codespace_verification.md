@@ -45,25 +45,57 @@ Result: FOUND expected test/demo placeholder secret strings.
 
 Observed placeholder locations included test files, demo attack fixtures, security-layer policy examples, redaction tests, MCP tests, LLM provider tests, and UI placeholder text.
 
+## GitHub Ruleset Manual Verification
+
+Ruleset created manually in GitHub UI.
+
+Ruleset name: Protect main workflow
+Status: Active
+Target branch: main
+
+Enabled:
+
+- Restrict deletions
+- Require pull request before merging
+- Required approvals: 1
+- Require review from Code Owners
+- Dismiss stale approvals
+- Block force pushes
+
+Temporarily not enabled:
+
+- Require status checks to pass
+
+Reason:
+
+GitHub requires at least one discovered status check before this rule can be enabled. This will be enabled after the first PR workflow run exposes check names.
+
 ## Local push issue
 
-The user created this evidence file locally and committed it as:
+The user created this evidence file locally and committed earlier evidence as:
 
 ```text
 f3ca665 docs: add step 2 codespace verification evidence
 ```
 
-The local push failed with:
+The user later created a local manual-ruleset evidence commit as:
+
+```text
+c99ce2b docs: record manual main ruleset verification
+```
+
+Both local pushes failed with:
 
 ```text
 remote: Permission to Amhdour/onyxBuildON.git denied to Amhdour.
 fatal: unable to access 'https://github.com/Amhdour/onyxBuildON.git/': The requested URL returned error: 403
 ```
 
-This remote file was therefore created through the connected GitHub tool to preserve the evidence on `security-layer-mvp`.
+This remote file was therefore created and updated through the connected GitHub tool to preserve evidence on `security-layer-mvp`.
 
 ## Follow-up required
 
 - Fix Codespace Git authentication or repository access before future local pushes.
 - Update the CI secret-pattern scan allowlist/exclusions before making the scan a required status check.
-- Finish manual GitHub branch protection and security toggles for `main`.
+- Enable `Require status checks to pass` after the first PR workflow run exposes check names.
+- Record GitHub security settings availability for Dependabot alerts, Dependabot security updates, secret scanning, and push protection.
