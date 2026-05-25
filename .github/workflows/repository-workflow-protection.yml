@@ -1,0 +1,106 @@
+name: Repository workflow protection
+
+on:
+  pull_request:
+    branches:
+      - main
+      - security-layer-mvp
+  push:
+    branches:
+      - security-layer-mvp
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  workflow-policy:
+    name: PR workflow policy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate repository workflow files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f CHANGELOG.md
+          test -f .github/CODEOWNERS
+          test -f .github/pull_request_template.md
+          test -f .github/dependabot.yml
+          grep -q "one control" .github/pull_request_template.md
+          grep -q "docs/security" .github/CODEOWNERS
+          grep -q "backend/onyx/security_layer" .github/CODEOWNERS
+          grep -q "github-actions" .github/dependabot.yml
+          grep -q "pip" .github/dependabot.yml
+
+      - name: Require changelog update for non-documentation PRs
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin "${{ github.base_ref }}" --depth=1
+          changed_files="$(git diff --name-only "origin/${{ github.base_ref }}"...HEAD)"
+          echo "$changed_files"
+          if echo "$changed_files" | grep -Ev '^(docs/|README.md|CHANGELOG.md|\.github/)' >/dev/null; then
+            echo "$changed_files" | grep -q '^CHANGELOG.md$'
+          fi
+
+      - name: Detect security-sensitive path changes
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin "${{ github.base_ref }}" --depth=1
+          changed_files="$(git diff --name-only "origin/${{ github.base_ref }}"...HEAD)"
+          echo "$changed_files" > /tmp/changed_files.txt
+          if grep -E '^(\.github/|docs/security/|backend/security_layer/|backend/onyx/security_layer/|backend/onyx/server/features/build/sandbox/|backend/onyx/server/features/mcp/|backend/onyx/context/search/|backend/onyx/db/)' /tmp/changed_files.txt; then
+            echo "Security-sensitive files changed. CODEOWNERS review must be enforced by branch protection."
+          else
+            echo "No security-sensitive paths changed."
+          fi
+
+  secret-pattern-scan:
+    name: Secret pattern scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Scan for common committed secret patterns
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git grep -nE '(BEGIN (RSA|DSA|EC|OPENSSH|PRIVATE) KEY|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9_]{36}|xox[baprs]-[A-Za-z0-9-]{10,}|sk-[A-Za-z0-9]{20,})' -- ':!docs/security/evidence/' ':!CHANGELOG.md'; then
+            echo "Potential secret detected. Remove or rotate before merge."
+            exit 1
+          fi
+          echo "No common committed secret pattern detected."
+
+  baseline-compile-check:
+    name: Baseline Python compile check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Compile security and workflow Python files when present
+        shell: bash
+        run: |
+          set -euo pipefail
+          paths=()
+          [ -d backend/security_layer ] && paths+=(backend/security_layer)
+          [ -d backend/onyx/security_layer ] && paths+=(backend/onyx/security_layer)
+          if [ ${#paths[@]} -eq 0 ]; then
+            echo "No security-layer Python package found yet."
+            exit 0
+          fi
+          python -m compileall "${paths[@]}"
